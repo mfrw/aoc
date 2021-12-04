@@ -78,3 +78,24 @@ fn get_input() -> Result<Vec<DriveCmd>, Box<dyn Error>> {
     }
     Ok(vec)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_test() {
+        let input = get_input().unwrap();
+        let start1 = Position { x: 0, y: 0, aim: 0 };
+        let want = part1(start1, &input).unwrap();
+        assert_eq!(want.x * want.y, 1654760);
+    }
+
+    #[test]
+    fn part2_test() {
+        let input = get_input().unwrap();
+        let start1 = Position { x: 0, y: 0, aim: 0 };
+        let want = part2(start1, &input).unwrap();
+        assert_eq!(want.x * want.y, 1956047400);
+    }
+}
