@@ -1,68 +1,72 @@
 use crate::utils;
 use std::error::Error;
 
+mod board;
+pub use board::Board;
+
 pub fn main() -> Result<(), Box<dyn Error>> {
     let (nrs, boards) = get_input()?;
-    println!("Day4/Part1 Sol: {}", part1(&nrs, &boards));
+    println!("Day4/Part1 Sol: {}", part1(&nrs, boards.clone()));
+    println!("Day4/Part2 Sol: {}", part2(&nrs, boards.clone()));
     Ok(())
 }
 
-fn part1(draws: &[i32], boards: &[Board]) -> usize {
-    for i in 5..draws.len() {
-        let winner = boards.iter().find_map(|b| check_board(&draws[0..i], &b));
-        if let Some(score) = winner {
-            return score;
+fn part1(numbers: &[usize], mut boards: Vec<Board>) -> usize {
+    for &nr in numbers {
+        for board in boards.iter_mut() {
+            board.mark_cell(nr);
+            if board.has_bingo() {
+                let unmarked_sum: usize = board
+                    .cells
+                    .iter()
+                    .filter(|(_, &coord)| !board.marked_cells.contains(&coord))
+                    .map(|(num, _)| *num)
+                    .sum();
+                return unmarked_sum * nr;
+            }
         }
     }
     unreachable!()
 }
 
-fn check_board(draws: &[i32], b: &Board) -> Option<usize> {
-    for i in 0..5 {
-        if (0..5).all(|j| draws.contains(&b[i][j].unwrap())) {
-            return Some(board_score(draws, b) * (*draws.last().unwrap() as usize));
-        }
-        if (0..5).all(|j| draws.contains(&b[i][j].unwrap())) {
-            return Some(board_score(draws, b) * (*draws.last().unwrap() as usize));
+fn part2(numbers: &[usize], mut boards: Vec<Board>) -> usize {
+    let mut last_bingo_idx: usize = 0;
+    let mut last_nr: usize = 0;
+
+    for &nr in numbers {
+        for (idx, board) in boards.iter_mut().enumerate() {
+            if !board.has_bingo() {
+                board.mark_cell(nr);
+                if board.has_bingo() {
+                    last_bingo_idx = idx;
+                    last_nr = nr;
+                }
+            }
         }
     }
-    None
+    let board = &boards[last_bingo_idx];
+    let unmarked_sum: usize = board
+        .cells
+        .iter()
+        .filter(|(_, &coord)| !board.marked_cells.contains(&coord))
+        .map(|(num, _)| *num)
+        .sum();
+    unmarked_sum * last_nr
 }
 
-fn board_score(draws: &[i32], b: &Board) -> usize {
-    b.iter()
-        .flatten()
-        .map(|&x| x.unwrap())
-        .filter(|x| !draws.contains(x))
-        .map(|x| x as usize)
-        .sum()
-}
-
-// Board is an array of Option<i32> 5x5
-type Board = Vec<Vec<Option<i32>>>;
-
-fn get_input() -> Result<(Vec<i32>, Vec<Board>), Box<dyn Error>> {
+fn get_input() -> Result<(Vec<usize>, Vec<Board>), Box<dyn Error>> {
     let input = utils::get_input("input/day4")?;
     let (random_nrs, boards) = input.split_once("\n\n").unwrap();
 
     let nrs = random_nrs
         .split(",")
-        .map(str::parse::<i32>)
+        .map(str::parse::<usize>)
         .map(Result::unwrap)
         .collect::<Vec<_>>();
 
     let boards: Vec<Board> = boards
         .split("\n\n")
-        .map(|b| {
-            b.lines()
-                .map(|line| {
-                    line.split_whitespace()
-                        .map(str::parse::<i32>)
-                        .map(Result::ok)
-                        .collect()
-                })
-                .collect()
-        })
+        .map(|s| s.parse::<Board>().unwrap())
         .collect();
     Ok((nrs, boards))
 }
@@ -72,7 +76,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn get_input_test() {
-        get_input();
+    fn part1_test() {
+        let (nrs, boards) = get_input().unwrap();
+        let want = part1(&nrs, boards);
+        assert_eq!(want, 25023);
+    }
+    #[test]
+    fn part2_test() {
+        let (nrs, boards) = get_input().unwrap();
+        let want = part2(&nrs, boards);
+        assert_eq!(want, 2634);
     }
 }
