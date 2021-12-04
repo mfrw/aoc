@@ -48,3 +48,21 @@ fn part1(input: &[i32]) -> Result<i32, Box<dyn Error>> {
     }
     Ok(inc)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_test() {
+        let input = get_input().unwrap();
+        let want = part1(&input).unwrap();
+        assert_eq!(want, 1529);
+    }
+    #[test]
+    fn part2_test() {
+        let input = get_input().unwrap();
+        let want = part2(&input).unwrap();
+        assert_eq!(want, 1567);
+    }
+}
