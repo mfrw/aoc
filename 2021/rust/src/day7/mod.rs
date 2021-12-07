@@ -10,21 +10,11 @@ pub fn main() -> Result<(), std::io::Error> {
 fn part1(input: &[i32]) -> usize {
     let min = *input.into_iter().min().unwrap();
     let max = *input.into_iter().max().unwrap();
-
-    let mut costs = vec![0usize];
-    for i in 1..(max - min + 1) {
-        costs.push(i as usize);
-    }
-    let mut best = usize::MAX;
-    for i in min..max {
-        let mut tmp = 0;
-        for j in input {
-            let cost = (i - j).abs() as usize;
-            tmp += cost;
-        }
-        best = std::cmp::min(tmp, best);
-    }
-    best
+    (min..=max)
+        .into_iter()
+        .map(|i| input.iter().map(|j| ((j - i).abs()) as usize).sum())
+        .min()
+        .unwrap()
 }
 
 fn get_input() -> Result<Vec<i32>, std::io::Error> {
