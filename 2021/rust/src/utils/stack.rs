@@ -31,3 +31,11 @@ impl<T> Stack<T> {
         self.base.is_empty()
     }
 }
+
+impl<T> Iterator for Stack<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.base.pop()
+    }
+}
