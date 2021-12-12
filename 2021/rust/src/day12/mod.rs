@@ -6,6 +6,7 @@ pub fn main() -> Result<(), std::io::Error> {
     let input = get_input()?;
     let graph = make_graph(&input);
     println!("Day12/Part1 Sol: {}", part1(&graph));
+    println!("Day12/Part2 Sol: {}", part2(&graph));
     Ok(())
 }
 
@@ -37,7 +38,7 @@ fn count_paths(
         return 1;
     }
 
-    if src.chars().all(|ch| ch.is_lowercase()) {
+    if src.chars().all(char::is_lowercase) {
         seen.insert(src.to_string());
     }
 
@@ -50,8 +51,40 @@ fn count_paths(
     ans
 }
 
+fn count_paths_double(
+    graph: &HashMap<String, Vec<String>>,
+    src: &str,
+    mut seen: HashSet<String>,
+    mut double: bool,
+) -> usize {
+    if seen.contains(src) {
+        if double {
+            return 0;
+        } else {
+            double = true;
+        }
+    }
+
+    if src == "end" {
+        return 1;
+    }
+
+    if src.chars().all(char::is_lowercase) {
+        seen.insert(src.to_string());
+    }
+
+    graph[src]
+        .iter()
+        .filter(|&node| node != "start")
+        .map(|from| count_paths_double(graph, from, seen.clone(), double))
+        .sum()
+}
+
 fn part1(graph: &HashMap<String, Vec<String>>) -> usize {
     count_paths(graph, "start", "end", &mut HashSet::new())
+}
+fn part2(graph: &HashMap<String, Vec<String>>) -> usize {
+    count_paths_double(graph, "start", HashSet::new(), false)
 }
 
 fn get_input() -> Result<Vec<(String, String)>, std::io::Error> {
@@ -83,5 +116,10 @@ mod tests {
     fn part1_test() {
         let graph = get_graph();
         assert_eq!(4573, part1(&graph));
+    }
+    #[test]
+    fn part2_test() {
+        let graph = get_graph();
+        assert_eq!(117509, part2(&graph));
     }
 }
