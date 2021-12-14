@@ -141,4 +141,16 @@ CN -> C";
         let sol = part2(&start, &mp, 50);
         assert_eq!(sol, 2248783425710274);
     }
+    #[test]
+    fn part1_test() {
+        let (start, mp) = get_input().unwrap();
+        let sol = part1(&start, &mp, 10);
+        assert_eq!(sol, 4244);
+    }
+    #[test]
+    fn part2_test() {
+        let (start, mp) = get_input().unwrap();
+        let sol = part2(&start, &mp, 40);
+        assert_eq!(sol, 4807056953866);
+    }
 }
