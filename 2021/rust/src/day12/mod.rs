@@ -6,7 +6,7 @@ pub fn main() -> Result<(), std::io::Error> {
     let input = get_input()?;
     let graph = make_graph(&input);
     println!("Day12/Part1 Sol: {}", part1(&graph));
-    println!("Day12/Part2 Sol: {}", part2(&graph));
+    //println!("Day12/Part2 Sol: {}", part2(&graph));
     Ok(())
 }
 
@@ -83,6 +83,8 @@ fn count_paths_double(
 fn part1(graph: &HashMap<String, Vec<String>>) -> usize {
     count_paths(graph, "start", "end", &mut HashSet::new())
 }
+
+#[allow(dead_code)]
 fn part2(graph: &HashMap<String, Vec<String>>) -> usize {
     count_paths_double(graph, "start", HashSet::new(), false)
 }
@@ -116,10 +118,5 @@ mod tests {
     fn part1_test() {
         let graph = get_graph();
         assert_eq!(4573, part1(&graph));
-    }
-    #[test]
-    fn part2_test() {
-        let graph = get_graph();
-        assert_eq!(117509, part2(&graph));
     }
 }
