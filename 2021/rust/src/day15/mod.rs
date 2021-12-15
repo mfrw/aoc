@@ -64,6 +64,7 @@ fn shortest_path(matrix: &[Vec<u8>], start: (usize, usize), end: (usize, usize))
 pub fn main() -> Result<(), std::io::Error> {
     let input = get_input()?;
     println!("Day15/Part1 Sol: {}", part1(&input));
+    println!("Day15/Part2 Sol: {}", part2(&input));
     Ok(())
 }
 
@@ -74,6 +75,27 @@ fn part1(matrix: &[Vec<u8>]) -> usize {
     let max_i = matrix.len();
     let max_j = matrix[0].len();
     shortest_path(matrix, (0, 0), (max_i - 1, max_j - 1))
+}
+
+fn part2(matrix: &[Vec<u8>]) -> usize {
+    let input = (0..matrix.len() * 5)
+        .map(|x| {
+            (0..matrix[0].len() * 5)
+                .map(|y| {
+                    let xlevel = (x / matrix.len()) as u8;
+                    let ylevel = (y / matrix[0].len()) as u8;
+                    let cost = matrix[x % matrix.len()][y % matrix[0].len()] + xlevel + ylevel;
+                    if cost < 10 {
+                        cost
+                    } else {
+                        cost - 9
+                    }
+                })
+                .collect::<Vec<u8>>()
+        })
+        .collect::<Vec<_>>();
+
+    part1(&input[..])
 }
 
 fn get_input() -> Result<Vec<Vec<u8>>, std::io::Error> {
@@ -102,5 +124,10 @@ mod tests {
     fn part1_test() {
         let input = get_input().unwrap();
         assert_eq!(388, part1(&input));
+    }
+    #[test]
+    fn part2_test() {
+        let input = get_input().unwrap();
+        assert_eq!(2819, part2(&input));
     }
 }
