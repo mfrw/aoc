@@ -9,11 +9,16 @@ pub fn main() -> Result<(), std::io::Error> {
     let input = get_input()?;
     let ins = parse_instruction(&input, 1);
     println!("Day16/Part1 Sol: {}", part1(&ins.1[0]));
+    println!("Day16/Part2 Sol: {}", part2(&ins.1[0]));
     Ok(())
 }
 
 fn part1(input: &Instruction) -> usize {
     version_sum(input)
+}
+
+fn part2(input: &Instruction) -> usize {
+    value(input)
 }
 
 fn get_input() -> Result<Vec<u8>, std::io::Error> {
@@ -112,5 +117,39 @@ fn version_sum(inst: &Instruction) -> usize {
         Instruction::Operator(version, _, insts) => {
             *version as usize + insts.iter().map(version_sum).sum::<usize>()
         }
+    }
+}
+
+fn value(inst: &Instruction) -> usize {
+    match inst {
+        Instruction::Literal(_, val) => *val as usize,
+        Instruction::Operator(_, id, insts) => match id {
+            0 => insts.iter().map(value).sum(),
+            1 => insts.iter().map(value).product(),
+            2 => insts.iter().map(value).min().unwrap(),
+            3 => insts.iter().map(value).max().unwrap(),
+            5 => (value(&insts[0]) > value(&insts[1])) as usize,
+            6 => (value(&insts[0]) < value(&insts[1])) as usize,
+            7 => (value(&insts[0]) == value(&insts[1])) as usize,
+            _ => unreachable!(),
+        },
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_test() {
+        let input = get_input().unwrap();
+        let ins = parse_instruction(&input, 1);
+        assert_eq!(949, part1(&ins.1[0]));
+    }
+    #[test]
+    fn part2_test() {
+        let input = get_input().unwrap();
+        let ins = parse_instruction(&input, 1);
+        assert_eq!(1114600142730, part2(&ins.1[0]));
     }
 }
