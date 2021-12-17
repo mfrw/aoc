@@ -6,11 +6,19 @@ pub fn main() -> Result<(), std::io::Error> {
         "Day17/Part1 Sol: {}",
         part1(input.0 .0, input.0 .1, input.1 .0, input.1 .1)
     );
+    println!(
+        "Day17/Part2 Sol: {}",
+        part2(input.0 .0, input.0 .1, input.1 .0, input.1 .1)
+    );
     Ok(())
 }
 
 fn part1(x0: i32, x1: i32, y0: i32, y1: i32) -> i32 {
     heights(x0, x1, y0, y1).max().unwrap()
+}
+
+fn part2(x0: i32, x1: i32, y0: i32, y1: i32) -> usize {
+    heights(x0, x1, y0, y1).count()
 }
 
 fn max_height(x0: i32, x1: i32, y0: i32, y1: i32, mut vx: i32, mut vy: i32) -> Option<i32> {
@@ -62,5 +70,11 @@ mod tests {
     fn part1_test() {
         let got = part1(217, 240, -126, -69);
         assert_eq!(7875, got);
+    }
+
+    #[test]
+    fn part2_test() {
+        let got = part2(217, 240, -126, -69);
+        assert_eq!(2321, got);
     }
 }
