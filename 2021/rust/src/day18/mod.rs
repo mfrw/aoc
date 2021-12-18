@@ -189,3 +189,20 @@ impl fmt::Debug for Comm {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_test() {
+        let input = get_input().unwrap();
+        assert_eq!(4173, part1(&input));
+    }
+
+    #[test]
+    fn part2_test() {
+        let input = get_input().unwrap();
+        assert_eq!(4706, part2(&input));
+    }
+}
