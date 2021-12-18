@@ -6,6 +6,7 @@ use crate::utils;
 pub fn main() -> Result<(), std::io::Error> {
     let input = get_input()?;
     println!("Day18/Part1 Sol: {}", part1(&input));
+    println!("Day18/Part2 Sol: {}", part2(&input));
 
     Ok(())
 }
@@ -18,6 +19,22 @@ fn part1(input: &[String]) -> i64 {
         .magnitude()
 }
 
+fn part2(input: &[String]) -> i64 {
+    let data = input
+        .iter()
+        .map(|x| Comm::new(x.to_string()))
+        .collect::<Vec<_>>();
+    (0..data.len())
+        .map(|i| {
+            (0..data.len())
+                .filter(|&j| j != i)
+                .map(|j| (data[i].clone() + data[j].clone()).magnitude())
+                .max()
+                .unwrap()
+        })
+        .max()
+        .unwrap()
+}
 
 fn get_input() -> Result<Vec<String>, std::io::Error> {
     let input = utils::get_input("input/day18")?;
