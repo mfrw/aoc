@@ -7,6 +7,7 @@ pub fn main() -> Result<(), std::io::Error> {
     let input = get_input()?;
     let st = make_set_and_dist(input);
     println!("Day19/Part1 Sol: {}", part1(&st.0));
+    println!("Day19/Part2 Sol: {}", part2(&st.1));
 
     Ok(())
 }
@@ -27,6 +28,14 @@ fn make_set_and_dist(mut scans: Vec<Vec<[i32; 3]>>) -> (HashSet<[i32; 3]>, Vec<[
 
 fn part1(st: &HashSet<[i32; 3]>) -> usize {
     st.len()
+}
+
+fn part2(st: &[[i32; 3]]) -> i32 {
+    st.iter()
+        .tuple_combinations()
+        .map(|([x1, y1, z1], [x2, y2, z2])| (x1 - x2).abs() + (y1 - y2).abs() + (z1 - z2).abs())
+        .max()
+        .unwrap()
 }
 
 fn get_input() -> Result<Vec<Vec<[i32; 3]>>, std::io::Error> {
