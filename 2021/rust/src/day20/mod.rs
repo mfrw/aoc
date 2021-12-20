@@ -87,3 +87,19 @@ fn parse_input(input: &str) -> Result<(Vec<char>, Vec<Vec<char>>), std::io::Erro
 
     Ok((algo, img))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_test() {
+        let input = get_input().unwrap();
+        assert_eq!(5597, part1(&input.0, &input.1));
+    }
+    #[test]
+    fn part2_test() {
+        let input = get_input().unwrap();
+        assert_eq!(18723, part2(&input.0, &input.1));
+    }
+}
