@@ -3,19 +3,28 @@ use crate::utils;
 pub fn main() -> Result<(), std::io::Error> {
     let input = get_input()?;
     println!("Day20/Part1 Sol: {}", part1(&input.0, &input.1));
+    println!("Day20/Part2 Sol: {}", part2(&input.0, &input.1));
 
     Ok(())
 }
 
-fn part1(alg: &[char], img: &Vec<Vec<char>>) -> usize {
+fn run(alg: &[char], img: &Vec<Vec<char>>, nr: usize) -> usize {
     let mut img = img.clone();
     pad(&mut img, Some('.'));
-    for _ in 0..2 {
+    for _ in 0..nr {
         enhance(alg, &mut img)
     }
     img.into_iter()
         .map(|row| row.into_iter().filter(|&v| v == '#').count())
         .sum()
+}
+
+fn part1(alg: &[char], img: &Vec<Vec<char>>) -> usize {
+    run(alg, img, 2)
+}
+
+fn part2(alg: &[char], img: &Vec<Vec<char>>) -> usize {
+    run(alg, img, 50)
 }
 
 fn pad(grid: &mut Vec<Vec<char>>, ch: Option<char>) {
