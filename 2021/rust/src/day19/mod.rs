@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use itertools::Itertools;
 use std::collections::HashSet;
 
