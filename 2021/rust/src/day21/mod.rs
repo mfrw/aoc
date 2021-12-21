@@ -1,9 +1,12 @@
 use itertools::Itertools;
 use std::collections::HashMap;
 
+use crate::utils;
+
 pub fn main() -> Result<(), std::io::Error> {
-    println!("Day21/Part1 Sol: {}", part1(10, 3));
-    println!("Day21/Part2 Sol: {}", part2(10, 3));
+    let input = get_input()?;
+    println!("Day21/Part1 Sol: {}", part1(input.0, input.1));
+    println!("Day21/Part2 Sol: {}", part2(input.0, input.1));
     Ok(())
 }
 
@@ -88,4 +91,40 @@ fn play_game(
     }
     cache.insert((p1, p2, pos1, pos2, turn1), score);
     score
+}
+
+fn get_input() -> Result<(usize, usize), std::io::Error> {
+    let input = utils::get_input("input/day21")?;
+    parse_input(&input)
+}
+
+fn parse_input(input: &str) -> Result<(usize, usize), std::io::Error> {
+    let (p1, p2) = input.trim_matches('\n').split_once('\n').unwrap();
+    let pos1 = p1
+        .strip_prefix("Player 1 starting position: ")
+        .unwrap()
+        .parse::<usize>()
+        .unwrap();
+    let pos2 = p2
+        .strip_prefix("Player 2 starting position: ")
+        .unwrap()
+        .parse::<usize>()
+        .unwrap();
+    Ok((pos1, pos2))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_test() {
+        let input = get_input().unwrap();
+        assert_eq!(742257, part1(input.0, input.1));
+    }
+    #[test]
+    fn part2_test() {
+        let input = get_input().unwrap();
+        assert_eq!(93726416205179, part2(input.0, input.1));
+    }
 }
