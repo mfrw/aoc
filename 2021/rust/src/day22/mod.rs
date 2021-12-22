@@ -7,7 +7,12 @@ type Cube = (bool, (i64, i64), (i64, i64), (i64, i64));
 pub fn main() -> Result<(), std::io::Error> {
     let input = get_input()?;
     println!("Day22/Part1 Sol: {}", part1(&input));
+    println!("Day22/Part2 Sol: {}", part2(&input));
     Ok(())
+}
+
+fn part2(cubes: &[Cube]) -> i64 {
+    total_volume(cubes)
 }
 
 fn part1(cubes: &[Cube]) -> i64 {
@@ -84,4 +89,20 @@ fn parse_input(input: &str) -> Result<Vec<Cube>, std::io::Error> {
         })
         .collect::<Vec<_>>();
     Ok(v)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_test() {
+        let input = get_input().unwrap();
+        assert_eq!(590467, part1(&input));
+    }
+    #[test]
+    fn part2_test() {
+        let input = get_input().unwrap();
+        assert_eq!(1225064738333321, part2(&input));
+    }
 }
