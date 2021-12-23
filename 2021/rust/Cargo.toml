@@ -9,3 +9,4 @@ description = "Solution for AOC 2021 in rust -- me trying to learn rust"
 
 [dependencies]
 itertools = "0.10.3"
+serde_scan = "0.4.1"

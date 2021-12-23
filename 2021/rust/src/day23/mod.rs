@@ -1,153 +1,418 @@
-use itertools::Itertools;
-use std::collections::{BinaryHeap, HashMap};
-
 use crate::utils;
+use std::collections::HashMap;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+enum Amphipod {
+    Amber,
+    Bronze,
+    Copper,
+    Desert,
+}
 
 pub fn main() -> Result<(), std::io::Error> {
     let input = get_input()?;
     println!("Day23/Part1 Sol: {}", part1(&input));
+    println!("Day23/Part2 Sol: {}", part2(input));
     Ok(())
 }
 
-fn part1(input: &Vec<Vec<char>>) -> i64 {
-    shortest_path(input)
+use Amphipod::*;
+type Hallway = [Option<Amphipod>; 11];
+type DestRoom = [Option<Amphipod>; 4];
+type DestRooms = [DestRoom; 4];
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct State {
+    hallway: Hallway,
+    dest_rooms: DestRooms,
 }
 
-fn get_input() -> Result<Vec<Vec<char>>, std::io::Error> {
+fn dest_room_to_hallway(dest_room_idx: usize) -> usize {
+    match dest_room_idx {
+        0 => 2,
+        1 => 4,
+        2 => 6,
+        3 => 8,
+        _ => panic!(),
+    }
+}
+
+fn home_of(dest_room_idx: usize) -> Amphipod {
+    match dest_room_idx {
+        0 => Amber,
+        1 => Bronze,
+        2 => Copper,
+        3 => Desert,
+        _ => panic!(),
+    }
+}
+
+fn home_for(a: Amphipod) -> usize {
+    match a {
+        Amber => 0,
+        Bronze => 1,
+        Copper => 2,
+        Desert => 3,
+    }
+}
+
+fn move_energy(a: Amphipod) -> usize {
+    match a {
+        Amber => 1,
+        Bronze => 10,
+        Copper => 100,
+        Desert => 1000,
+    }
+}
+
+fn parse_amphipod(c: char) -> Amphipod {
+    match c {
+        'A' => Amber,
+        'B' => Bronze,
+        'C' => Copper,
+        'D' => Desert,
+        _ => panic!(),
+    }
+}
+
+#[derive(Debug, Clone)]
+enum Pos {
+    Hallway(usize),
+    DestRoom(usize, usize),
+}
+
+#[derive(Debug)]
+struct Move(Amphipod, Pos, Pos, usize);
+
+fn is_unobstructed(hallway: &Hallway, pos: usize, a: usize, b: usize) -> bool {
+    let from = usize::min(a, b);
+    let to = usize::max(a, b);
+    (from..=to).all(|i| i == pos || hallway[i] == None)
+}
+
+fn hallway_dist(a: usize, b: usize) -> usize {
+    let min = usize::min(a, b);
+    let max = usize::max(a, b);
+    max - min
+}
+
+fn possible_moves_from_hallway(hallway_idx: usize, state: &State) -> Option<Move> {
+    match state.hallway[hallway_idx] {
+        Some(hallway_a) => {
+            let new_home = home_for(hallway_a);
+            let new_home_hallway_idx = dest_room_to_hallway(new_home);
+            if is_unobstructed(
+                &state.hallway,
+                hallway_idx,
+                hallway_idx,
+                new_home_hallway_idx,
+            ) {
+                if state.dest_rooms[new_home]
+                    .iter()
+                    .all(|v| v == &None || v == &Some(hallway_a))
+                {
+                    let new_home_top = find_open_slot(&state.dest_rooms[new_home]);
+                    return Some(Move(
+                        hallway_a,
+                        Pos::Hallway(hallway_idx),
+                        Pos::DestRoom(new_home, new_home_top),
+                        (move_inout_cost(new_home_top)
+                            + hallway_dist(hallway_idx, new_home_hallway_idx))
+                            * move_energy(hallway_a),
+                    ));
+                }
+            }
+        }
+        None => {}
+    }
+    None
+}
+
+fn can_move_to_hallway(idx: usize) -> bool {
+    idx != 2 && idx != 4 && idx != 6 && idx != 8
+}
+
+fn find_top(dest_room: &DestRoom) -> Option<(usize, Amphipod)> {
+    dest_room
+        .iter()
+        .enumerate()
+        .find(|(_, it)| it.is_some())
+        .map(|(idx, a)| (idx, a.unwrap()))
+}
+
+fn find_open_slot(dest_room: &DestRoom) -> usize {
+    for i in (0..4).rev() {
+        if dest_room[i] == None {
+            return i;
+        }
+    }
+    panic!();
+}
+
+fn move_inout_cost(slot: usize) -> usize {
+    slot + 1
+}
+
+fn possible_moves_from_room(room_idx: usize, state: &State) -> Option<Vec<Move>> {
+    let dest_room = state.dest_rooms[room_idx];
+    if let Some((top_slot, top_a)) = find_top(&dest_room) {
+        if (top_slot..4).all(|i| dest_room[i] == Some(home_of(room_idx))) {
+            return None;
+        }
+        let mut result: Vec<Move> = vec![];
+        let cur_pos = Pos::DestRoom(room_idx, top_slot);
+        let new_home = home_for(top_a);
+        if new_home != room_idx
+            && is_unobstructed(
+                &state.hallway,
+                99,
+                dest_room_to_hallway(room_idx),
+                dest_room_to_hallway(new_home),
+            )
+        {
+            if state.dest_rooms[new_home]
+                .iter()
+                .all(|v| v == &None || v == &Some(top_a))
+            {
+                let new_home_slot = find_open_slot(&state.dest_rooms[new_home]);
+                result.push(Move(
+                    top_a,
+                    cur_pos.clone(),
+                    Pos::DestRoom(new_home, new_home_slot),
+                    (move_inout_cost(top_slot)
+                        + move_inout_cost(new_home_slot)
+                        + hallway_dist(
+                            dest_room_to_hallway(room_idx),
+                            dest_room_to_hallway(new_home),
+                        ))
+                        * move_energy(top_a),
+                ))
+            }
+        }
+
+        for hw in 0..11 {
+            if can_move_to_hallway(hw) {
+                if is_unobstructed(&state.hallway, 99, dest_room_to_hallway(room_idx), hw) {
+                    result.push(Move(
+                        top_a,
+                        cur_pos.clone(),
+                        Pos::Hallway(hw),
+                        (move_inout_cost(top_slot)
+                            + hallway_dist(dest_room_to_hallway(room_idx), hw))
+                            * move_energy(top_a),
+                    ))
+                }
+            }
+        }
+
+        if result.len() > 0 {
+            return Some(result);
+        }
+    }
+    None
+}
+
+fn apply_move(m: &Move, state: &State) -> State {
+    let mut hallway = state.hallway.clone();
+    let mut dest_rooms = state.dest_rooms.clone();
+    let Move(a, from, to, _cost) = m;
+    match from {
+        &Pos::DestRoom(idx, slot) => {
+            assert_eq!(&dest_rooms[idx][slot].unwrap(), a);
+            dest_rooms[idx][slot] = None;
+        }
+        &Pos::Hallway(idx) => {
+            assert_eq!(&hallway[idx].unwrap(), a);
+            hallway[idx] = None;
+        }
+    }
+    match to {
+        &Pos::DestRoom(idx, slot) => {
+            assert_eq!(dest_rooms[idx][slot], None);
+            dest_rooms[idx][slot] = Some(*a);
+        }
+        &Pos::Hallway(idx) => {
+            assert_eq!(hallway[idx], None);
+            hallway[idx] = Some(*a);
+        }
+    }
+    State {
+        hallway,
+        dest_rooms,
+    }
+}
+
+fn all_possible_moves(state: &State) -> Vec<Move> {
+    let dr1_moves = (0..4)
+        .filter_map(|dr| possible_moves_from_room(dr, state))
+        .flat_map(|v| v);
+    let hallway_moves = (0..11usize).filter_map(|room| possible_moves_from_hallway(room, state));
+    dr1_moves.chain(hallway_moves).collect()
+}
+
+fn is_complete(state: &State) -> bool {
+    state.dest_rooms.iter().enumerate().all(|(idx, dr)| {
+        let a = home_of(idx);
+        dr.iter().all(|da| da == &Some(a))
+    })
+}
+
+#[allow(unused)]
+fn dbg_amphipod(a: Amphipod) -> char {
+    match a {
+        Amber => 'A',
+        Bronze => 'B',
+        Copper => 'C',
+        Desert => 'D',
+    }
+}
+
+#[allow(unused)]
+fn dbg_opt_amphipod(a: Option<Amphipod>) -> char {
+    match a {
+        None => '.',
+        Some(a) => dbg_amphipod(a),
+    }
+}
+
+#[allow(unused)]
+fn dbg_state(hallway: &Hallway, dest_rooms: &DestRooms) {
+    let hallway = hallway
+        .iter()
+        .map(|p| match p {
+            None => '.',
+            Some(a) => dbg_amphipod(*a),
+        })
+        .collect::<String>();
+    let (dr_a, dr_b, dr_c, dr_d) = (
+        &dest_rooms[0],
+        &dest_rooms[1],
+        &dest_rooms[2],
+        &dest_rooms[3],
+    );
+    println!(
+        r"#############
+#{}#
+###{}#{}#{}#{}###
+  #{}#{}#{}#{}#
+  #{}#{}#{}#{}#
+  #{}#{}#{}#{}#
+  #########",
+        hallway,
+        dbg_opt_amphipod(dr_a[0]),
+        dbg_opt_amphipod(dr_b[0]),
+        dbg_opt_amphipod(dr_c[0]),
+        dbg_opt_amphipod(dr_d[0]),
+        dbg_opt_amphipod(dr_a[1]),
+        dbg_opt_amphipod(dr_b[1]),
+        dbg_opt_amphipod(dr_c[1]),
+        dbg_opt_amphipod(dr_d[1]),
+        dbg_opt_amphipod(dr_a[2]),
+        dbg_opt_amphipod(dr_b[2]),
+        dbg_opt_amphipod(dr_c[2]),
+        dbg_opt_amphipod(dr_d[2]),
+        dbg_opt_amphipod(dr_a[3]),
+        dbg_opt_amphipod(dr_b[3]),
+        dbg_opt_amphipod(dr_c[3]),
+        dbg_opt_amphipod(dr_d[3]),
+    );
+    println!();
+}
+
+fn make_moves(state: &State, memo: &mut HashMap<State, Option<usize>>) -> Option<usize> {
+    if is_complete(state) {
+        return Some(0);
+    }
+    if let Some(previous_result) = memo.get(state) {
+        return *previous_result;
+    }
+    let result = {
+        all_possible_moves(state)
+            .iter()
+            .filter_map(|m| {
+                let Move(_, _, _, move_cost) = m;
+                let new_state = apply_move(m, state);
+                make_moves(&new_state, memo).map(|sub_cost| move_cost + sub_cost)
+            })
+            .min()
+    };
+    memo.insert(state.clone(), result);
+    result
+}
+
+fn part1(input: &[[Option<Amphipod>; 4]; 4]) -> usize {
+    let hallway: Hallway = [
+        None, None, None, None, None, None, None, None, None, None, None,
+    ];
+    let state = State {
+        hallway,
+        dest_rooms: *input,
+    };
+    make_moves(&state, &mut HashMap::new()).unwrap()
+}
+
+fn part2(mut input: [[Option<Amphipod>; 4]; 4]) -> usize {
+    let hallway: Hallway = [
+        None, None, None, None, None, None, None, None, None, None, None,
+    ];
+    input[0][3] = input[0][1];
+    input[1][3] = input[1][1];
+    input[2][3] = input[2][1];
+    input[3][3] = input[3][1];
+    input[0][1] = Some(Desert);
+    input[0][2] = Some(Desert);
+    input[1][1] = Some(Copper);
+    input[1][2] = Some(Bronze);
+    input[2][1] = Some(Bronze);
+    input[2][2] = Some(Amber);
+    input[3][1] = Some(Amber);
+    input[3][2] = Some(Copper);
+    let state = State {
+        hallway,
+        dest_rooms: input,
+    };
+    make_moves(&state, &mut HashMap::new()).unwrap()
+}
+
+fn get_input() -> Result<DestRooms, std::io::Error> {
     let input = utils::get_input("input/day23")?;
     parse_input(&input)
 }
 
-fn parse_input(input: &str) -> Result<Vec<Vec<char>>, std::io::Error> {
-    let mut v = Vec::new();
-    for l in input.lines() {
-        if l == "" {
-            continue;
-        }
-        v.push(l.chars().collect::<Vec<_>>());
-    }
+fn parse_input(input: &str) -> Result<DestRooms, std::io::Error> {
+    let (a1, b1, c1, d1, a2, b2, c2, d2): (char, char, char, char, char, char, char, char) =
+        serde_scan::scan!(r"#############
+#...........#
+###{}#{}#{}#{}###
+  #{}#{}#{}#{}#
+  #########" <- input)
+        .unwrap();
+
+    let v = [
+        [
+            Some(parse_amphipod(a1)),
+            Some(parse_amphipod(a2)),
+            Some(Amber),
+            Some(Amber),
+        ],
+        [
+            Some(parse_amphipod(b1)),
+            Some(parse_amphipod(b2)),
+            Some(Bronze),
+            Some(Bronze),
+        ],
+        [
+            Some(parse_amphipod(c1)),
+            Some(parse_amphipod(c2)),
+            Some(Copper),
+            Some(Copper),
+        ],
+        [
+            Some(parse_amphipod(d1)),
+            Some(parse_amphipod(d2)),
+            Some(Desert),
+            Some(Desert),
+        ],
+    ];
     Ok(v)
-}
-
-fn shortest_path(maze: &Vec<Vec<char>>) -> i64 {
-    let mut dist = HashMap::new();
-    let mut q = BinaryHeap::new();
-    q.push((0, maze.clone()));
-    while let Some((cost, m)) = q.pop() {
-        if right_configuration(&m, maze.len() - 3) {
-            return -cost;
-        }
-        if let Some(&c) = dist.get(&m) {
-            if -cost > c {
-                continue;
-            }
-        }
-        for (nmoves, m) in moves(&m, maze.len() - 2) {
-            let next_cost = -cost + nmoves;
-            let &c = dist.get(&m).unwrap_or(&1000000);
-            if c > next_cost {
-                dist.insert(m.clone(), next_cost);
-                q.push((-next_cost, m));
-            }
-        }
-    }
-    unreachable!()
-}
-
-fn right_configuration(maze: &Vec<Vec<char>>, size: usize) -> bool {
-    maze[2..(2 + size)]
-        .iter()
-        .all(|l| itertools::equal(l[3..10].iter().copied(), "A#B#C#D".chars()))
-}
-
-fn moves(maze: &Vec<Vec<char>>, room_len: usize) -> Vec<(i64, Vec<Vec<char>>)> {
-    let mut moves = Vec::new();
-    for y in 0..maze[1].len() {
-        // check moving into a room
-        match maze[1][y] {
-            'A'..='D' => {
-                let (idx, exp) = match maze[1][y] {
-                    'A' => (3, 1),
-                    'B' => (5, 10),
-                    'C' => (7, 100),
-                    'D' => (9, 1000),
-                    _ => unreachable!(),
-                };
-                let mut cost =
-                    if y > idx && (idx..y).all(|c| maze[1][c] == '.') && maze[2][idx] == '.' {
-                        y - idx
-                    } else if y < idx
-                        && ((y + 1)..=idx).all(|c| maze[1][c] == '.')
-                        && maze[2][idx] == '.'
-                    {
-                        idx - y
-                    } else {
-                        continue;
-                    };
-                let mut m = maze.clone();
-                let i = (2..=room_len)
-                    .take_while(|&i| maze[i][idx] == '.')
-                    .last()
-                    .unwrap();
-                if i != room_len && m[i + 1][idx] != maze[1][y] {
-                    continue;
-                }
-                m[i][idx] = maze[1][y];
-                m[1][y] = '.';
-                cost += i - 1;
-                moves.push(((cost * exp) as i64, m));
-            }
-            _ => {}
-        }
-    }
-    for (x, y) in (2..=room_len).cartesian_product([3, 5, 7, 9]) {
-        // check moving out of a room
-        if (2..x).any(|i| maze[i][y] != '.') {
-            continue;
-        }
-        if (x + 1..=room_len).any(|i| maze[i][y] == '.') {
-            continue;
-        }
-        match maze[x][y] {
-            'A'..='D' => {
-                let exp = match maze[x][y] {
-                    'A' => 1,
-                    'B' => 10,
-                    'C' => 100,
-                    'D' => 1000,
-                    _ => unreachable!(),
-                };
-                for i in y..maze[0].len() {
-                    // move left
-                    if maze[1][i] != '.' {
-                        break;
-                    }
-                    if ![1, 2, 4, 6, 8, 10, 11].contains(&i) {
-                        continue;
-                    }
-                    let cost = x - 1 + i - y;
-                    let mut m = maze.clone();
-                    m[1][i] = maze[x][y];
-                    m[x][y] = '.';
-                    moves.push(((cost * exp) as i64, m));
-                }
-                for i in (1..=y).rev() {
-                    // move right
-                    if maze[1][i] != '.' {
-                        break;
-                    }
-                    if ![1, 2, 4, 6, 8, 10, 11].contains(&i) {
-                        continue;
-                    }
-                    let cost = x - 1 + y - i;
-                    let mut m = maze.clone();
-                    m[1][i] = maze[x][y];
-                    m[x][y] = '.';
-                    moves.push(((cost * exp) as i64, m));
-                }
-            }
-            _ => {}
-        }
-    }
-    moves
 }
