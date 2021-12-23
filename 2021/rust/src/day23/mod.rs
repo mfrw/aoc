@@ -416,3 +416,19 @@ fn parse_input(input: &str) -> Result<DestRooms, std::io::Error> {
     ];
     Ok(v)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_test() {
+        let input = get_input().unwrap();
+        assert_eq!(14460, part1(&input));
+    }
+    #[test]
+    fn part2_test() {
+        let input = get_input().unwrap();
+        assert_eq!(41366, part2(input));
+    }
+}
