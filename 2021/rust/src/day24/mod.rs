@@ -5,11 +5,17 @@ use std::collections::HashMap;
 pub fn main() -> Result<(), std::io::Error> {
     let program = get_input()?;
     println!("Day24/Part1 Sol: {}", part1(&program));
+    //println!("Day24/Part2 Sol: {}", part2(&program));
     Ok(())
 }
 
 fn part1(program: &[Instruction]) -> i64 {
     solve(program, false)
+}
+
+#[allow(dead_code)]
+fn part2(program: &[Instruction]) -> i64 {
+    solve(program, true)
 }
 
 enum RegOrVal {
