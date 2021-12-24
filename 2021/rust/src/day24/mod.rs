@@ -276,3 +276,19 @@ impl ALU {
         &self.z
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_test() {
+        let pgm = get_input().unwrap();
+        assert_eq!(99995969919326, part1(&pgm).unwrap());
+    }
+    #[test]
+    fn part2_test() {
+        let pgm = get_input().unwrap();
+        assert_eq!(48111514719111, part2(&pgm).unwrap());
+    }
+}
