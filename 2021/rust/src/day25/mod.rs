@@ -45,3 +45,14 @@ fn parse_input(input: &str) -> Result<Vec<Vec<char>>, std::io::Error> {
         .collect::<Vec<_>>();
     Ok(v)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_test() {
+        let input = get_input().unwrap();
+        assert_eq!(part1(input), 337);
+    }
+}
