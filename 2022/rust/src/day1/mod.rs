@@ -22,10 +22,10 @@ fn part1(input: String) -> Result<i32, Box<dyn Error>> {
 }
 
 fn part2(input: String) -> Result<i32, Box<dyn Error>> {
-    let mut v = input
+    use std::collections::BinaryHeap;
+    let hp = input
         .split("\n\n")
         .map(|elf| elf.lines().map(|l| l.parse::<i32>().unwrap()).sum())
-        .collect::<Vec<i32>>();
-    v.sort();
-    Ok(v.into_iter().rev().take(3).sum())
+        .collect::<BinaryHeap<i32>>();
+    Ok(hp.into_iter_sorted().take(3).sum())
 }
