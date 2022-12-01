@@ -1,3 +1,5 @@
+#![feature(binary_heap_into_iter_sorted)]
+
 mod utils;
 
 mod day1;
