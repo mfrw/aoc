@@ -1,31 +1,32 @@
 use crate::utils;
-use std::error::Error;
 
-pub fn main() -> Result<(), Box<dyn Error>> {
-    let input = utils::get_input("input/day1")?;
-    let sol1 = part1(input.clone())?;
-    let sol2 = part2(input)?;
-    println!("Day1/Part1 Sol: {}", sol1);
-    println!("Day1/Part2 Sol: {}", sol2);
-    Ok(())
-}
+pub struct Solver;
 
-fn part1(input: String) -> Result<i32, Box<dyn Error>> {
-    let mut mx = i32::MIN;
-    for elf in input.split("\n\n") {
-        let tmp: i32 = elf.lines().map(|l| l.parse::<i32>().unwrap()).sum();
-        if tmp > mx {
-            mx = tmp;
-        }
+impl utils::Solver<1> for Solver {
+    type Part1 = i32;
+    type Part2 = i32;
+
+    fn part1(&self, input: &str) -> Result<Self::Part1, Box<dyn std::error::Error>> {
+        Ok(part1_int(input).unwrap())
     }
-    Ok(mx)
+
+    fn part2(&self, input: &str) -> Result<Self::Part2, Box<dyn std::error::Error>> {
+        Ok(part2_int(input))
+    }
 }
 
-fn part2(input: String) -> Result<i32, Box<dyn Error>> {
+fn part1_int(input: &str) -> Option<i32> {
+    input
+        .split("\n\n")
+        .map(|elf| elf.lines().map(|l| l.parse::<i32>().unwrap()).sum())
+        .max()
+}
+
+fn part2_int(input: &str) -> i32 {
     use std::collections::BinaryHeap;
     let hp = input
         .split("\n\n")
         .map(|elf| elf.lines().map(|l| l.parse::<i32>().unwrap()).sum())
         .collect::<BinaryHeap<i32>>();
-    Ok(hp.into_iter_sorted().take(3).sum())
+    hp.into_iter_sorted().take(3).sum()
 }
