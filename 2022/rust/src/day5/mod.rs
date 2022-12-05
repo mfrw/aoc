@@ -83,26 +83,12 @@ impl FromStr for Move {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut it = s.split(" ");
-        it.next();
-        let nr = it
-            .next()
-            .unwrap()
-            .parse::<usize>()
-            .map_err(|e| format!("{e}"))?;
-        it.next();
-        let from = it
-            .next()
-            .unwrap()
-            .parse::<usize>()
-            .map_err(|e| format!("{e}"))?;
-        it.next();
-        let to = it
-            .next()
-            .unwrap()
-            .parse::<usize>()
-            .map_err(|e| format!("{e}"))?;
-        Ok(Move { nr, from, to })
+        let mut it = s.split(" ").filter_map(|val| val.parse().ok());
+        Ok(Move {
+            nr: it.next().ok_or(format!("failed to parse moves"))?,
+            from: it.next().ok_or(format!("failed to parse from"))?,
+            to: it.next().ok_or(format!("failed to parse to"))?,
+        })
     }
 }
 
