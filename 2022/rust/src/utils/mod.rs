@@ -14,9 +14,9 @@ pub trait Solver<const DAY: usize> {
     fn solve(&self) -> Result<(), Box<dyn std::error::Error>> {
         let input = get_input(&format!("input/day{}", DAY))?;
         let sol1 = self.part1(&input)?;
-        let sol2 = self.part2(&input)?;
-
         println!("Day{}/part1 Sol: {}", DAY, sol1);
+
+        let sol2 = self.part2(&input)?;
         println!("Day{}/part2 Sol: {}", DAY, sol2);
 
         Ok(())
