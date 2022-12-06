@@ -1,6 +1,16 @@
-use std::str::FromStr;
+mod alt;
+
+use std::fmt;
 
 use crate::utils;
+
+use nom::{
+    branch::alt,
+    bytes::complete::{tag, take, take_while1},
+    combinator::{all_consuming, map, map_res, opt},
+    sequence::{delimited, preceded, tuple},
+    Finish, IResult,
+};
 
 pub struct Solver;
 
@@ -10,99 +20,160 @@ impl utils::Solver<5> for Solver {
     type Part2 = String;
 
     fn part1(&self, input: &str) -> Result<Self::Part1, Box<dyn std::error::Error>> {
-        let mut state = initial_state();
-        input
+        let lines = input.split("\n\n").collect::<Vec<_>>();
+        let mut piles = initial_state(lines[0])?;
+
+        lines[1]
             .lines()
-            .skip(10)
-            .map(|l| l.parse::<Move>().unwrap())
-            .for_each(|m| state.process(&m));
-        let ans = state.top();
-        Ok(ans.into_iter().collect())
+            .map(|line| all_consuming(parse_instruction)(line).finish().unwrap().1)
+            .for_each(|i| piles.apply(i));
+
+        Ok(piles
+            .0
+            .iter()
+            .map(|pile| pile.last().unwrap().0)
+            .collect::<String>())
     }
 
     fn part2(&self, input: &str) -> Result<Self::Part2, Box<dyn std::error::Error>> {
-        let mut state = initial_state();
-        input
+        let lines = input.split("\n\n").collect::<Vec<_>>();
+        let mut piles = initial_state(lines[0])?;
+
+        lines[1]
             .lines()
-            .skip(10)
-            .map(|l| l.parse::<Move>().unwrap())
-            .for_each(|m| state.process_enhanced(&m));
-        let ans = state.top();
-        Ok(ans.into_iter().collect())
+            .map(|line| all_consuming(parse_instruction)(line).finish().unwrap().1)
+            .for_each(|i| piles.apply2(i));
+
+        Ok(piles
+            .0
+            .iter()
+            .map(|pile| pile.last().unwrap().0)
+            .collect::<String>())
     }
 }
 
-struct State<T> {
-    s: Vec<Vec<T>>,
-}
-
-impl<T> State<T>
-where
-    T: Clone + std::fmt::Debug,
-{
-    fn process(&mut self, m: &Move) {
-        if m.from == m.to {
-            return;
-        }
-        for _ in 0..m.nr {
-            let tmp = self.s[m.from - 1].pop().unwrap();
-            self.s[m.to - 1].push(tmp);
-        }
-    }
-
-    fn process_enhanced(&mut self, m: &Move) {
-        if m.from == m.to {
-            return;
-        }
-        let mut v = vec![];
-        for _ in 0..m.nr {
-            let tmp = self.s[m.from - 1].pop().unwrap();
-            v.push(tmp);
-        }
-        v.reverse();
-        self.s[m.to - 1].append(&mut v);
-    }
-
-    fn top(&self) -> Vec<T> {
-        let mut ans = vec![];
-        for v in self.s.clone() {
-            ans.push(v.last().unwrap().clone());
-        }
-        ans
-    }
-}
-
-#[derive(Debug)]
-struct Move {
-    nr: usize,
-    from: usize,
-    to: usize,
-}
-
-impl FromStr for Move {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut it = s.split(" ").filter_map(|val| val.parse().ok());
-        Ok(Move {
-            nr: it.next().ok_or(format!("failed to parse moves"))?,
-            from: it.next().ok_or(format!("failed to parse from"))?,
-            to: it.next().ok_or(format!("failed to parse to"))?,
+fn initial_state(input: &str) -> Result<Piles, String> {
+    let crate_lines = input
+        .lines()
+        .map_while(|line| {
+            all_consuming(parse_crate_line)(line)
+                .finish()
+                .ok()
+                .map(|(_, line)| line)
         })
+        .collect();
+    let piles = Piles(transpose_rev(crate_lines));
+    Ok(piles)
+}
+
+struct Crate(char);
+
+impl fmt::Debug for Crate {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
-fn initial_state() -> State<char> {
-    let v1 = vec!['B', 'Z', 'T'];
-    let v2 = vec!['V', 'H', 'T', 'D', 'N'];
-    let v3 = vec!['B', 'F', 'M', 'D'];
-    let v4 = vec!['T', 'J', 'G', 'W', 'V', 'Q', 'L'];
-    let v5 = vec!['W', 'D', 'G', 'P', 'V', 'F', 'Q', 'M'];
-    let v6 = vec!['V', 'Z', 'Q', 'G', 'H', 'F', 'S'];
-    let v7 = vec!['Z', 'S', 'N', 'R', 'L', 'T', 'C', 'W'];
-    let v8 = vec!['Z', 'H', 'W', 'D', 'J', 'N', 'R', 'M'];
-    let v9 = vec!['M', 'Q', 'L', 'F', 'D', 'S'];
-    State {
-        s: vec![v1, v2, v3, v4, v5, v6, v7, v8, v9],
+impl fmt::Display for Crate {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(self, f)
+    }
+}
+
+fn parse_crate(i: &str) -> IResult<&str, Crate> {
+    let first_char = |s: &str| Crate(s.chars().next().unwrap());
+    let f = delimited(tag("["), take(1_usize), tag("]"));
+    map(f, first_char)(i)
+}
+
+fn parse_hole(i: &str) -> IResult<&str, ()> {
+    map(tag("   "), drop)(i)
+}
+
+fn parse_crate_or_hole(i: &str) -> IResult<&str, Option<Crate>> {
+    alt((map(parse_crate, Some), map(parse_hole, |_| None)))(i)
+}
+
+fn parse_crate_line(i: &str) -> IResult<&str, Vec<Option<Crate>>> {
+    let (mut i, c) = parse_crate_or_hole(i)?;
+    let mut v = vec![c];
+    loop {
+        let (next_i, maybe_c) = opt(preceded(tag(" "), parse_crate_or_hole))(i)?;
+        match maybe_c {
+            Some(c) => v.push(c),
+            None => break,
+        }
+        i = next_i;
+    }
+    Ok((i, v))
+}
+
+fn transpose_rev<T>(v: Vec<Vec<Option<T>>>) -> Vec<Vec<T>> {
+    assert!(!v.is_empty());
+    let len = v[0].len();
+    let mut iters: Vec<_> = v.into_iter().map(|n| n.into_iter()).collect();
+    (0..len)
+        .map(|_| {
+            iters
+                .iter_mut()
+                .rev()
+                .filter_map(|n| n.next().unwrap())
+                .collect::<Vec<T>>()
+        })
+        .collect()
+}
+fn parse_number(i: &str) -> IResult<&str, usize> {
+    map_res(take_while1(|c: char| c.is_ascii_digit()), |s: &str| {
+        s.parse::<usize>()
+    })(i)
+}
+
+fn parse_pile_number(i: &str) -> IResult<&str, usize> {
+    map(parse_number, |i| i - 1)(i)
+}
+#[derive(Debug)]
+struct Instruction {
+    quantity: usize,
+    src: usize,
+    dst: usize,
+}
+
+fn parse_instruction(i: &str) -> IResult<&str, Instruction> {
+    map(
+        tuple((
+            preceded(tag("move "), parse_number),
+            preceded(tag(" from "), parse_pile_number),
+            preceded(tag(" to "), parse_pile_number),
+        )),
+        |(quantity, src, dst)| Instruction { quantity, src, dst },
+    )(i)
+}
+
+struct Piles(Vec<Vec<Crate>>);
+impl fmt::Debug for Piles {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i, pile) in self.0.iter().enumerate() {
+            writeln!(f, "Pile {}: {:?}", i + 1, pile)?;
+        }
+        Ok(())
+    }
+}
+
+impl Piles {
+    fn apply(&mut self, ins: Instruction) {
+        for _ in 0..ins.quantity {
+            let el = self.0[ins.src].pop().unwrap();
+            self.0[ins.dst].push(el);
+        }
+    }
+
+    fn apply2(&mut self, ins: Instruction) {
+        let mut tmp = vec![];
+        for _ in 0..ins.quantity {
+            let el = self.0[ins.src].pop().unwrap();
+            tmp.push(el);
+        }
+        tmp.reverse();
+        self.0[ins.dst].append(&mut tmp);
     }
 }

@@ -8,3 +8,4 @@ description = "Solution for AOC 2021 in rust -- me trying to learn rust"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+nom = "7.1.1"
