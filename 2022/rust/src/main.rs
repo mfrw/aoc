@@ -62,3 +62,68 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     day25::Solver.solve()?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn day1_test() {
+        let s = day1::Solver.solve_internal().unwrap();
+        assert_eq!((68442, 204837), s);
+    }
+
+    #[test]
+    fn day2_test() {
+        let s = day2::Solver.solve_internal().unwrap();
+        assert_eq!((9241, 14610), s);
+    }
+
+    #[test]
+    fn day3_test() {
+        let s = day3::Solver.solve_internal().unwrap();
+        assert_eq!((7826, 2577), s);
+    }
+
+    #[test]
+    fn day4_test() {
+        let s = day4::Solver.solve_internal().unwrap();
+        assert_eq!((644, 926), s);
+    }
+
+    #[test]
+    fn day5_test() {
+        let s = day5::Solver.solve_internal().unwrap();
+        assert_eq!(("NTWZZWHFV".into(), "BRZGFVBTJ".into()), s);
+    }
+
+    #[test]
+    fn day6_test() {
+        let s = day6::Solver.solve_internal().unwrap();
+        assert_eq!((1850, 2823), s);
+    }
+
+    #[test]
+    fn day7_test() {
+        let s = day7::Solver.solve_internal().unwrap();
+        assert_eq!((1432936, 272298), s);
+    }
+
+    #[test]
+    fn day8_test() {
+        let s = day8::Solver.solve_internal().unwrap();
+        assert_eq!((1785, 345168), s);
+    }
+
+    #[test]
+    fn day9_test() {
+        let s = day9::Solver.solve_internal().unwrap();
+        assert_eq!((6081, 2487), s);
+    }
+
+    #[test]
+    fn day10_test() {
+        let s = day10::Solver.solve_internal().unwrap();
+        assert_eq!(14240, s.0);
+    }
+}
