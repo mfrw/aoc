@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::fmt::Debug;
+use std::str::FromStr;
 
 use crate::utils;
 
@@ -17,64 +19,42 @@ impl utils::Solver<11> for Solver {
     }
 }
 
-fn parse_input(input: &str) -> Vec<Monkey<i64>> {
+fn last_word(l: &str) -> Option<&str> {
+    l.split_whitespace().last()
+}
+
+fn last_item<T>(l: &str) -> T
+where
+    T: FromStr,
+    <T as FromStr>::Err: Debug,
+{
+    let i = last_word(l).unwrap();
+    T::from_str(i).unwrap()
+}
+
+fn parse_input<T>(input: &str) -> Vec<Monkey<T>>
+where
+    T: FromStr,
+    <T as FromStr>::Err: Debug,
+{
     input
         .split("\n\n")
         .map(|ipt| {
-            let mut it = ipt.lines();
-            it.next();
+            let input = ipt.lines().collect::<Vec<_>>();
 
-            let items = it
-                .next()
-                .unwrap()
+            let items = input[1]
                 .trim()
                 .strip_prefix("Starting items: ")
                 .unwrap()
                 .split(",")
-                .map(|i| i.trim().parse::<i64>().unwrap())
+                .map(|i| i.trim().parse::<T>().unwrap())
                 .collect::<Vec<_>>();
 
-            let op = it
-                .next()
-                .unwrap()
-                .trim()
-                .strip_prefix("Operation: new = old ")
-                .map(|text| {
-                    if text == "* old" {
-                        Operation::Square
-                    } else if let Some(value) = text.strip_prefix("* ") {
-                        Operation::Mul(value.parse().unwrap())
-                    } else if let Some(value) = text.strip_prefix("+ ") {
-                        Operation::Add(value.parse().unwrap())
-                    } else {
-                        panic!("unknown operatation {}", text);
-                    }
-                })
-                .unwrap();
-            let test = it
-                .next()
-                .unwrap()
-                .split_whitespace()
-                .last()
-                .unwrap()
-                .parse::<i64>()
-                .unwrap();
-            let tr = it
-                .next()
-                .unwrap()
-                .split_whitespace()
-                .last()
-                .unwrap()
-                .parse::<usize>()
-                .unwrap();
-            let fl = it
-                .next()
-                .unwrap()
-                .split_whitespace()
-                .last()
-                .unwrap()
-                .parse::<usize>()
-                .unwrap();
+            let op = input[2].trim().parse::<Operation<_>>().unwrap();
+            let test = last_item(input[3]);
+            let tr = last_item(input[4]);
+            let fl = last_item(input[5]);
+
             Monkey {
                 op,
                 test,
@@ -90,7 +70,7 @@ fn parse_input(input: &str) -> Vec<Monkey<i64>> {
 #[derive(Debug)]
 struct Monkey<T> {
     test: T,
-    op: Operation,
+    op: Operation<T>,
     tr: usize,
     fl: usize,
     items: Vec<T>,
@@ -98,18 +78,50 @@ struct Monkey<T> {
 }
 
 #[derive(Debug)]
-enum Operation {
+enum Operation<T> {
     Square,
-    Add(i64),
-    Mul(i64),
+    Add(T),
+    Mul(T),
 }
 
-impl Operation {
-    fn apply(&self, input: i64) -> i64 {
+impl<T> FromStr for Operation<T>
+where
+    T: FromStr,
+    <T as FromStr>::Err: Debug,
+{
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let op = s
+            .trim()
+            .strip_prefix("Operation: new = old ")
+            .map(|text| {
+                if text == "* old" {
+                    Ok(Operation::Square)
+                } else if let Some(value) = text.strip_prefix("* ") {
+                    Ok(Operation::Mul(value.parse().unwrap()))
+                } else if let Some(value) = text.strip_prefix("+ ") {
+                    Ok(Operation::Add(value.parse().unwrap()))
+                } else {
+                    Err(format!("unknown operatation {}", text))
+                }
+            })
+            .unwrap();
+        op
+    }
+}
+
+impl<T> Operation<T>
+where
+    T: Copy,
+    T: std::ops::Add<T, Output = T>,
+    T: std::ops::Mul<T, Output = T>,
+{
+    fn apply(&self, input: T) -> T {
         match self {
             Operation::Square => input * input,
-            Operation::Mul(val) => input * val,
-            Operation::Add(val) => input + val,
+            Operation::Mul(val) => input * val.clone(),
+            Operation::Add(val) => input + val.clone(),
         }
     }
 }
