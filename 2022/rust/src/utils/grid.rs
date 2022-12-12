@@ -16,6 +16,12 @@ impl From<(usize, usize)> for GridCoord {
     }
 }
 
+impl From<GridCoord> for (usize, usize) {
+    fn from(value: GridCoord) -> Self {
+        (value.x, value.y)
+    }
+}
+
 pub struct Grid<T> {
     width: usize,
     height: usize,
@@ -58,5 +64,23 @@ where
 
     pub fn height(&self) -> usize {
         self.height
+    }
+
+    pub fn neighbors(
+        &self,
+        current: GridCoord,
+        with_diagonals: bool,
+    ) -> impl Iterator<Item = (GridCoord, T)> + '_ {
+        let mut dirs = vec![(-1, 0), (1, 0), (0, -1), (0, 1)];
+        if with_diagonals {
+            dirs.extend(vec![(-1, -1), (-1, 1), (1, -1), (1, 1)]);
+        }
+        let c = (current.x as i64, current.y as i64);
+        dirs.into_iter()
+            .map(move |(x, y)| (c.0 + x, c.1 + y))
+            .filter(|(x, y)| *x >= 0 && *y >= 0)
+            .map(|c| (c.0 as usize, c.1 as usize).into())
+            .filter(|&c| self.in_bounds(c))
+            .map(|c| (c, self.cell(c).unwrap().clone()))
     }
 }
