@@ -21,8 +21,8 @@ impl utils::Solver<12> for Solver {
                 return Ok(pth_len);
             }
             for (neigh_pos, neigh_ele) in grid.neighbors(curr, false) {
-                if (neigh_ele <= 1 + curr_ele) && !st.contains(&neigh_pos) {
-                    q.push_back((neigh_pos, neigh_ele, pth_len + 1));
+                if (neigh_ele <= &(1 + curr_ele)) && !st.contains(&neigh_pos) {
+                    q.push_back((neigh_pos, *neigh_ele, pth_len + 1));
                     st.insert(neigh_pos);
                 }
             }
@@ -43,7 +43,7 @@ impl utils::Solver<12> for Solver {
             }
             for (neigh_pos, neigh_ele) in grid.neighbors(curr, false) {
                 if (curr_ele <= 1 + neigh_ele) && !st.contains(&neigh_pos) {
-                    q.push_back((neigh_pos, neigh_ele, pth_len + 1));
+                    q.push_back((neigh_pos, *neigh_ele, pth_len + 1));
                     st.insert(neigh_pos);
                 }
             }
@@ -73,7 +73,7 @@ fn parse_grid(input: &str) -> (Grid<usize>, Option<GridCoord>, Option<GridCoord>
                 'a'..='z' => (col as u8 - b'a') as usize,
                 _ => panic!("Bad input"),
             };
-            *grid.cell_mut((x, y).into()).unwrap() = val;
+            grid.replace((x, y).into(), val);
         }
     }
     (grid, start, end)

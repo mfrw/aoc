@@ -94,7 +94,7 @@ fn parse_grid(input: &str) -> Grid<usize> {
     for (y, line) in input.lines().enumerate() {
         for (x, col) in line.chars().enumerate() {
             assert!(col.is_ascii_digit());
-            *grid.cell_mut((x, y).into()).unwrap() = col as usize - '0' as usize;
+            grid.replace((x, y).into(), col as usize - '0' as usize);
         }
     }
 

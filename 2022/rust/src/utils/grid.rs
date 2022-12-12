@@ -25,18 +25,19 @@ impl From<GridCoord> for (usize, usize) {
 pub struct Grid<T> {
     width: usize,
     height: usize,
-    data: Vec<T>,
+    data: Vec<Option<T>>,
 }
 
-impl<T> Grid<T>
-where
-    T: Default + Clone,
-{
+impl<T> Grid<T> {
     pub fn new(width: usize, height: usize) -> Self {
+        let mut v = Vec::with_capacity(width * height);
+        for _ in 0..(width * height) {
+            v.push(None);
+        }
         Grid {
             width,
             height,
-            data: vec![Default::default(); width * height],
+            data: v,
         }
     }
 
@@ -44,18 +45,19 @@ where
         coord.x < self.width && coord.y < self.height
     }
 
+    #[allow(dead_code)]
     pub fn cell_mut(&mut self, coord: GridCoord) -> Option<&mut T> {
         if !self.in_bounds(coord) {
             return None;
         }
-        Some(&mut self.data[coord.y * self.width + coord.x])
+        self.data[coord.y * self.width + coord.x].as_mut()
     }
 
     pub fn cell(&self, coord: GridCoord) -> Option<&T> {
         if !self.in_bounds(coord) {
             return None;
         }
-        Some(&self.data[coord.y * self.width + coord.x])
+        self.data[coord.y * self.width + coord.x].as_ref()
     }
 
     pub fn width(&self) -> usize {
@@ -70,7 +72,7 @@ where
         &self,
         current: GridCoord,
         with_diagonals: bool,
-    ) -> impl Iterator<Item = (GridCoord, T)> + '_ {
+    ) -> impl Iterator<Item = (GridCoord, &T)> + '_ {
         let mut dirs = vec![(-1, 0), (1, 0), (0, -1), (0, 1)];
         if with_diagonals {
             dirs.extend(vec![(-1, -1), (-1, 1), (1, -1), (1, 1)]);
@@ -81,6 +83,10 @@ where
             .filter(|(x, y)| *x >= 0 && *y >= 0)
             .map(|c| (c.0 as usize, c.1 as usize).into())
             .filter(|&c| self.in_bounds(c))
-            .map(|c| (c, self.cell(c).unwrap().clone()))
+            .map(|c| (c, self.cell(c).unwrap()))
+    }
+
+    pub fn replace(&mut self, c: GridCoord, elm: T) -> Option<T> {
+        self.data[c.y * self.width + c.x].replace(elm)
     }
 }
