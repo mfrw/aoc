@@ -1,10 +1,11 @@
 use nom::{
+    branch::alt,
     bytes::complete::{tag, take_while1},
     character::complete::multispace0,
     combinator::{all_consuming, map, map_res},
     multi::separated_list0,
     sequence::{delimited, preceded},
-    Finish, IResult, Parser,
+    Finish, IResult,
 };
 
 use crate::utils;
@@ -105,9 +106,10 @@ fn sp(i: &str) -> IResult<&str, &str> {
 }
 
 fn parse_number<T: std::str::FromStr>(i: &str) -> IResult<&str, T> {
-    let nr = map_res(take_while1(|c: char| c.is_ascii_digit()), |s: &str| {
-        s.parse::<T>()
-    });
+    let nr = map_res(
+        take_while1(|c: char| c.is_ascii_digit() || c == '-'),
+        |s: &str| s.parse::<T>(),
+    );
     delimited(sp, nr, sp)(i)
 }
 
@@ -117,22 +119,28 @@ where
 {
     delimited(
         preceded(sp, tag("[")),
-        separated_list0(
-            preceded(sp, tag(",")),
-            map(parse_number::<T>, Value::Int).or(map(parse_item_list::<T>, Value::List)),
-        ),
+        separated_list0(preceded(sp, tag(",")), parse_item_or_list),
         preceded(sp, tag("]")),
     )(i)
+}
+
+fn parse_item_or_list<T>(i: &str) -> IResult<&str, Value<T>>
+where
+    T: Copy + Ord + std::str::FromStr,
+{
+    alt((
+        map(parse_number::<T>, Value::Int),
+        map(parse_item_list::<T>, Value::List),
+    ))(i)
 }
 
 fn packet_parser<T>(i: &str) -> Option<Packet<T>>
 where
     T: std::str::FromStr + Copy + Ord,
 {
-    let l = all_consuming(parse_item_list::<T>)(i).finish();
-    if l.is_err() {
-        None
+    if let Ok((_, l)) = all_consuming(parse_item_list::<T>)(i).finish() {
+        Some(Packet { list: l })
     } else {
-        Some(Packet { list: l.unwrap().1 })
+        None
     }
 }
