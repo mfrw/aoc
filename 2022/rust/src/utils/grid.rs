@@ -77,11 +77,14 @@ impl<T> Grid<T> {
         if with_diagonals {
             dirs.extend(vec![(-1, -1), (-1, 1), (1, -1), (1, 1)]);
         }
-        let c = (current.x as i64, current.y as i64);
+
         dirs.into_iter()
-            .map(move |(x, y)| (c.0 + x, c.1 + y))
-            .filter(|(x, y)| *x >= 0 && *y >= 0)
-            .map(|c| (c.0 as usize, c.1 as usize).into())
+            .filter_map(move |(dx, dy)| {
+                Some(GridCoord {
+                    x: current.x.checked_add_signed(dx)?,
+                    y: current.y.checked_add_signed(dy)?,
+                })
+            })
             .filter(|&c| self.in_bounds(c))
             .map(|c| (c, self.cell(c).unwrap()))
     }
