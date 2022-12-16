@@ -1,5 +1,8 @@
 #![feature(binary_heap_into_iter_sorted)]
 
+#[macro_use]
+extern crate scan_fmt;
+
 mod utils;
 use crate::utils::Solver;
 
@@ -18,6 +21,7 @@ mod day11;
 mod day12;
 mod day13;
 mod day14;
+mod day15;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     day1::Solver.solve()?;
@@ -34,5 +38,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     day12::Solver.solve()?;
     day13::Solver.solve()?;
     day14::Solver.solve()?;
+    day15::Solver.solve()?;
     Ok(())
 }
