@@ -1,4 +1,6 @@
 use crate::utils;
+use rayon::prelude::*;
+
 use std::collections::HashSet;
 
 pub struct Solver;
@@ -17,6 +19,7 @@ impl utils::Solver<3> for Solver {
         let v = input.lines().collect::<Vec<_>>();
         let s = v
             .chunks(3)
+            .par_bridge()
             .map(|ch| {
                 let sta: HashSet<char> = HashSet::from_iter(ch[0].chars());
                 let stb = HashSet::from_iter(ch[1].chars());

@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use std::collections::{HashSet, VecDeque};
 
 use crate::utils;
@@ -42,22 +43,26 @@ impl utils::Solver<18> for Solver {
             }
         }
         Ok(st
-            .iter()
-            .map(|cube| cube.adjacent().filter(|x| water.contains(x)).count())
+            .par_iter()
+            .map(|cube| {
+                cube.adjacent()
+                    .par_bridge()
+                    .filter(|x| water.contains(x))
+                    .count()
+            })
             .sum())
     }
 }
 
 fn surface_area(st: &HashSet<Point>) -> usize {
-    let mut sfa = 0;
-    for cube in st.iter() {
-        for adj in cube.adjacent() {
-            if !st.contains(&adj) {
-                sfa += 1;
-            }
-        }
-    }
-    sfa
+    st.par_iter()
+        .map(|cube| {
+            cube.adjacent()
+                .par_bridge()
+                .filter(|adj| !st.contains(&adj))
+                .count()
+        })
+        .sum()
 }
 
 fn parse_input(i: &str) -> impl Iterator<Item = Point> + '_ {
