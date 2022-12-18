@@ -10,4 +10,5 @@ description = "Solution for AOC 2021 in rust -- me trying to learn rust"
 [dependencies]
 itertools = "0.10.5"
 nom = "7.1.1"
+rayon = "1.6.1"
 scan_fmt = "0.2.6"
