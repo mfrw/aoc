@@ -1,4 +1,5 @@
 use crate::utils;
+use rayon::prelude::*;
 
 pub struct Solver;
 
@@ -43,7 +44,8 @@ impl utils::Solver<17> for Solver {
             }
         }
         let (offset, size) = (0..500)
-            .find_map(|offset| {
+            .into_par_iter()
+            .find_map_first(|offset| {
                 let delta_iter = deltas.iter().skip(offset);
                 let size = (2..=2500).find(|size| {
                     let window = deltas[offset..offset + size].iter().cycle();
