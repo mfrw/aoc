@@ -15,11 +15,15 @@ pub trait Solver<const DAY: usize> {
 
     fn solve(&self) -> Result<(), Box<dyn std::error::Error>> {
         let input = get_input(&format!("input/day{}", DAY))?;
+        let now1 = std::time::Instant::now();
         let sol1 = self.part1(&input)?;
-        println!("Day{}/part1 Sol: {}", DAY, sol1);
+        let elapsed1 = now1.elapsed();
+        println!("Day{}/part1 ({:?}) Sol: {}", DAY, elapsed1, sol1);
 
+        let now2 = std::time::Instant::now();
         let sol2 = self.part2(&input)?;
-        println!("Day{}/part2 Sol: {}", DAY, sol2);
+        let elapsed2 = now2.elapsed();
+        println!("Day{}/part2 ({:?}) Sol: {}", DAY, elapsed2, sol2);
 
         Ok(())
     }
