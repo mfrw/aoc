@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
 use nom::branch::alt;
@@ -28,7 +29,53 @@ impl utils::Solver<21> for Solver {
     }
 
     fn part2(&self, input: &str) -> Result<Self::Part2, Box<dyn std::error::Error>> {
-        todo!()
+        let mut mp = AllMonkeys::new();
+        input
+            .lines()
+            .map(|l| all_consuming(parse_line)(l).finish().unwrap().1)
+            .for_each(|m| mp.add_monkey(m));
+
+        let old = mp.eval("hsdb").cmp(&mp.eval("mwrd"));
+
+        let answer = binary_search(i64::MIN as i128, i64::MAX as i128, |x| {
+            mp.mp
+                .entry("humn".into())
+                .and_modify(|v| v.dep = Dep::Terminal(x));
+
+            let new = mp.eval("hsdb").cmp(&mp.eval("mwrd"));
+            match new {
+                Ordering::Equal => Ordering::Equal,
+                new => {
+                    if old == new {
+                        Ordering::Greater
+                    } else {
+                        Ordering::Less
+                    }
+                }
+            }
+        })
+        .unwrap();
+        Ok(answer)
+    }
+}
+
+fn binary_search<F>(mut lo: i128, mut hi: i128, mut cmp: F) -> Option<i128>
+where
+    F: FnMut(i128) -> Ordering,
+{
+    while lo != hi {
+        let mid = (lo + hi) / 2;
+        match cmp(mid) {
+            // Always return the leftmost result
+            Ordering::Equal => hi = mid,
+            Ordering::Less => hi = mid - 1,
+            Ordering::Greater => lo = mid + 1,
+        }
+    }
+    match cmp(lo) {
+        Ordering::Equal => Some(lo),
+        Ordering::Less => None,
+        Ordering::Greater => None,
     }
 }
 
