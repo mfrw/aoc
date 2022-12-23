@@ -28,6 +28,7 @@ mod day18;
 mod day19;
 mod day20;
 mod day21;
+mod day22;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     day1::Solver.solve()?;
@@ -51,5 +52,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     day19::Solver.solve()?;
     day20::Solver.solve()?;
     day21::Solver.solve()?;
+    day22::Solver.solve()?;
     Ok(())
 }
