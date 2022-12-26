@@ -1,10 +1,21 @@
 use crate::utils;
 
-pub fn main() -> std::io::Result<()> {
-    let input = get_input()?;
-    println!("Day1/Part1 Sol: {}", part1(&input));
-    println!("Day1/Part2 Sol: {}", part2(&input));
-    Ok(())
+pub struct Day;
+
+impl utils::Solver<1> for Day {
+    type Part1 = i64;
+
+    type Part2 = usize;
+
+    fn part1(&self, i: &str) -> Result<Self::Part1, Box<dyn std::error::Error>> {
+        let input = parse_input(i)?;
+        Ok(part1(&input))
+    }
+
+    fn part2(&self, i: &str) -> Result<Self::Part2, Box<dyn std::error::Error>> {
+        let input = parse_input(i)?;
+        Ok(part2(&input))
+    }
 }
 
 fn part2(input: &[char]) -> usize {

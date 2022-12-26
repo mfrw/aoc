@@ -2,11 +2,22 @@ use std::collections::HashMap;
 
 use crate::utils;
 
-pub fn main() -> std::io::Result<()> {
-    let input = get_input()?;
-    println!("Day3/Part1 Sol: {}", part1(&input));
-    println!("Day3/Part2 Sol: {}", part2(&input));
-    Ok(())
+pub struct Day;
+
+impl utils::Solver<3> for Day {
+    type Part1 = usize;
+
+    type Part2 = usize;
+
+    fn part1(&self, i: &str) -> Result<Self::Part1, Box<dyn std::error::Error>> {
+        let input = parse_input(i)?;
+        Ok(part1(&input))
+    }
+
+    fn part2(&self, i: &str) -> Result<Self::Part2, Box<dyn std::error::Error>> {
+        let input = parse_input(i)?;
+        Ok(part2(&input))
+    }
 }
 
 fn advance(ch: char, mut x: i32, mut y: i32) -> (i32, i32) {
@@ -57,11 +68,6 @@ fn part2(input: &[char]) -> usize {
     }
 
     mp.len()
-}
-
-fn get_input() -> std::io::Result<Vec<char>> {
-    let input = utils::get_input("input/day3")?;
-    parse_input(&input)
 }
 
 fn parse_input(input: &str) -> std::io::Result<Vec<char>> {
