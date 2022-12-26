@@ -4,6 +4,7 @@
 extern crate scan_fmt;
 
 mod utils;
+
 use crate::utils::Solver;
 
 mod day1;
@@ -31,6 +32,7 @@ mod day21;
 mod day22;
 mod day23;
 mod day24;
+mod day25;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     day1::Solver.solve()?;
@@ -57,5 +59,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     day22::Solver.solve()?;
     day23::Solver.solve()?;
     day24::Solver.solve()?;
+    day25::Solver.solve()?;
     Ok(())
 }
