@@ -22,8 +22,7 @@ impl utils::Solver<7> for Day {
         i.lines().map(|l| parse_line(l).unwrap().1).for_each(|e| {
             sym.insert(e.0, e.1);
         });
-        let root = sym.get("a").unwrap().clone();
-        let ans = root.eval(&mut sym).unwrap();
+        let ans = sym.remove("a").unwrap().eval(&mut sym).unwrap();
         Ok(ans)
     }
 
@@ -31,24 +30,23 @@ impl utils::Solver<7> for Day {
         let mut sym: SymTab<u16> = SymTab::default();
         i.lines().map(|l| parse_line(l).unwrap().1).for_each(|e| {
             if e.0 == "b" {
-                sym.insert(e.0, Expr::Terminal(Operand::Value(956)));
+                sym.insert(e.0, Expr::new_term_with_value(956));
             } else {
                 sym.insert(e.0, e.1);
             }
         });
-        let root = sym.get("a").unwrap().clone();
-        let ans = root.eval(&mut sym).unwrap();
+        let ans = sym.remove("a").unwrap().eval(&mut sym).unwrap();
         Ok(ans)
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 enum Operand<T> {
     Value(T),
     Label(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 enum Expr<T> {
     Terminal(Operand<T>),
     And { l: Operand<T>, r: Operand<T> },
@@ -67,8 +65,9 @@ impl<T> SymTab<T> {
     fn insert(&mut self, k: String, v: Expr<T>) {
         self.mp.insert(k.into(), v);
     }
-    fn get(&self, k: &str) -> Option<&Expr<T>> {
-        self.mp.get(k)
+
+    fn remove(&mut self, k: &str) -> Option<Expr<T>> {
+        self.mp.remove(k)
     }
 }
 
@@ -85,9 +84,8 @@ where
         match self {
             Operand::Value(t) => Some(t.clone()),
             Operand::Label(l) => {
-                let root = sym.get(l)?.clone();
-                let ans = root.eval(sym)?.clone();
-                sym.insert(l.into(), Expr::Terminal(Operand::new_val(ans)));
+                let ans = sym.remove(l)?.eval(sym)?;
+                sym.insert(l.into(), Expr::new_term_with_value(ans));
                 Some(ans)
             }
         }
@@ -139,6 +137,9 @@ where
             }
         };
         val
+    }
+    fn new_term_with_value(v: T) -> Self {
+        Expr::Terminal(Operand::Value(v))
     }
 }
 
@@ -262,53 +263,53 @@ fn parse_line(i: &str) -> IResult<&str, (String, Expr<u16>)> {
     ))(i)
 }
 
-//#[test]
-//fn basic_dep_eval() {
-//let mut sym: SymTab<u16> = SymTab::default();
-//sym.insert("x".into(), Expr::Terminal(Operand::Value(123)));
-//sym.insert("y".into(), Expr::Terminal(Operand::Value(456)));
-//sym.insert(
-//"d".into(),
-//Expr::And {
-//l: Operand::new_label("x"),
-//r: Operand::new_label("y"),
-//},
-//);
-//sym.insert(
-//"e".into(),
-//Expr::Or {
-//l: Operand::new_label("x"),
-//r: Operand::new_label("y"),
-//},
-//);
+#[test]
+fn basic_dep_eval() {
+    let mut sym: SymTab<u16> = SymTab::default();
+    sym.insert("x".into(), Expr::Terminal(Operand::Value(123)));
+    sym.insert("y".into(), Expr::Terminal(Operand::Value(456)));
+    sym.insert(
+        "d".into(),
+        Expr::And {
+            l: Operand::new_label("x"),
+            r: Operand::new_label("y"),
+        },
+    );
+    sym.insert(
+        "e".into(),
+        Expr::Or {
+            l: Operand::new_label("x"),
+            r: Operand::new_label("y"),
+        },
+    );
 
-//sym.insert(
-//"f".into(),
-//Expr::Lshift {
-//l: Operand::new_label("x"),
-//nr: 2,
-//},
-//);
-//sym.insert(
-//"g".into(),
-//Expr::Rshift {
-//l: Operand::new_label("y"),
-//nr: 2,
-//},
-//);
-//sym.insert(
-//"h".into(),
-//Expr::Not {
-//l: Operand::new_label("x"),
-//},
-//);
-//sym.insert(
-//"i".into(),
-//Expr::Not {
-//l: Operand::new_label("y"),
-//},
-//);
-//assert_eq!(sym.get("e").unwrap().eval(&mut sym), Some(507));
-//assert_eq!(sym.get("f").unwrap().eval(&mut sym), Some(492));
-//assert_eq!(sym.get("h").unwrap().eval(&mut sym), Some(65412));
-//}
+    sym.insert(
+        "f".into(),
+        Expr::Lshift {
+            l: Operand::new_label("x"),
+            nr: 2,
+        },
+    );
+    sym.insert(
+        "g".into(),
+        Expr::Rshift {
+            l: Operand::new_label("y"),
+            nr: 2,
+        },
+    );
+    sym.insert(
+        "h".into(),
+        Expr::Not {
+            l: Operand::new_label("x"),
+        },
+    );
+    sym.insert(
+        "i".into(),
+        Expr::Not {
+            l: Operand::new_label("y"),
+        },
+    );
+    assert_eq!(sym.remove("e").unwrap().eval(&mut sym), Some(507));
+    assert_eq!(sym.remove("f").unwrap().eval(&mut sym), Some(492));
+    assert_eq!(sym.remove("h").unwrap().eval(&mut sym), Some(65412));
+}
