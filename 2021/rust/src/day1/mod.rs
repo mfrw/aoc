@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::utils;
 use std::error::Error;
 
@@ -11,16 +13,13 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn part2(input: &[i32]) -> Result<i32, Box<dyn Error>> {
-    let mut prev = i32::MAX;
-    let mut inc = 0;
-    for i in input.windows(3) {
-        let curr = i.iter().sum();
-        if curr > prev {
-            inc += 1;
-        }
-        prev = curr;
-    }
-    Ok(inc)
+    let ans = input
+        .windows(3)
+        .map(|w| w.iter().sum::<i32>())
+        .tuple_windows()
+        .filter(|(w0, w1)| w1 > w0)
+        .count();
+    Ok(ans as i32)
 }
 
 fn get_input() -> Result<Vec<i32>, Box<dyn Error>> {
@@ -34,19 +33,8 @@ fn get_input() -> Result<Vec<i32>, Box<dyn Error>> {
 }
 
 fn part1(input: &[i32]) -> Result<i32, Box<dyn Error>> {
-    let mut iter = input.iter();
-    let mut prev = iter.next().unwrap();
-
-    let mut inc = 0;
-
-    for i in iter {
-        let cur = i;
-        if cur > prev {
-            inc += 1;
-        }
-        prev = cur;
-    }
-    Ok(inc)
+    let ans = input.windows(2).filter(|w| w[1] > w[0]).count();
+    Ok(ans as i32)
 }
 
 #[cfg(test)]
