@@ -126,4 +126,94 @@ mod tests {
         let s = day10::Solver.solve_internal().unwrap();
         assert_eq!(14240, s.0);
     }
+
+    #[test]
+    fn day11_test() {
+        let s = day11::Solver.solve_internal().unwrap();
+        assert_eq!((102399, 23641658401), s);
+    }
+
+    #[test]
+    fn day12_test() {
+        let s = day12::Solver.solve_internal().unwrap();
+        assert_eq!((370, 363), s);
+    }
+
+    #[test]
+    fn day13_test() {
+        let s = day13::Solver.solve_internal().unwrap();
+        assert_eq!((5208, 25792), s);
+    }
+
+    #[test]
+    fn day14_test() {
+        let s = day14::Solver.solve_internal().unwrap();
+        assert_eq!((618, 26358), s);
+    }
+
+    #[test]
+    fn day15_test() {
+        let s = day15::Solver.solve_internal().unwrap();
+        assert_eq!((4717631, 13197439355220), s);
+    }
+
+    #[test]
+    fn day16_test() {
+        let s = day16::Solver.solve_internal().unwrap();
+        assert_eq!((1488, 2111), s);
+    }
+
+    #[test]
+    fn day17_test() {
+        let s = day17::Solver.solve_internal().unwrap();
+        assert_eq!((3071, 1523615160362), s);
+    }
+
+    #[test]
+    fn day18_test() {
+        let s = day18::Solver.solve_internal().unwrap();
+        assert_eq!((4500, 2558), s);
+    }
+
+    #[test]
+    fn day19_test() {
+        let s = day19::Solver.solve_internal().unwrap();
+        assert_eq!((1528, 16926), s);
+    }
+
+    #[test]
+    fn day20_test() {
+        let s = day20::Solver.solve_internal().unwrap();
+        assert_eq!((19070, 14773357352059), s);
+    }
+
+    #[test]
+    fn day21_test() {
+        let s = day21::Solver.solve_internal().unwrap();
+        assert_eq!((124765768589550, 3059361893920), s);
+    }
+
+    #[test]
+    fn day22_test() {
+        let s = day22::Solver.solve_internal().unwrap();
+        assert_eq!((3590, 86382), s);
+    }
+
+    #[test]
+    fn day23_test() {
+        let s = day23::Solver.solve_internal().unwrap();
+        assert_eq!((4254, 992), s);
+    }
+
+    #[test]
+    fn day24_test() {
+        let s = day24::Solver.solve_internal().unwrap();
+        assert_eq!((260, 747), s);
+    }
+
+    #[test]
+    fn day25_test() {
+        let s = day25::Solver.solve_internal().unwrap();
+        assert_eq!("2=112--220-=-00=-=20", s.0);
+    }
 }
