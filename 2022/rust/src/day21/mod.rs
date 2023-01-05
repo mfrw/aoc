@@ -79,16 +79,16 @@ where
     }
 }
 
-struct AllMonkeys {
-    mp: HashMap<String, Monkey>,
+struct AllMonkeys<'a> {
+    mp: HashMap<&'a str, Monkey<'a>>,
 }
 
-impl AllMonkeys {
+impl<'a> AllMonkeys<'a> {
     fn new() -> Self {
         Self { mp: HashMap::new() }
     }
 
-    fn add_monkey(&mut self, m: Monkey) {
+    fn add_monkey(&mut self, m: Monkey<'a>) {
         self.mp.entry(m.name.clone()).or_insert(m);
     }
 
@@ -113,15 +113,15 @@ impl AllMonkeys {
 }
 
 #[derive(Clone)]
-struct Monkey {
-    name: String,
-    dep: Dep,
+struct Monkey<'a> {
+    name: &'a str,
+    dep: Dep<'a>,
 }
 
 #[derive(Clone)]
-enum Dep {
+enum Dep<'a> {
     Terminal(i128),
-    Expr { l: String, r: String, op: Op },
+    Expr { l: &'a str, r: &'a str, op: Op },
 }
 
 #[derive(Clone)]
@@ -136,13 +136,13 @@ fn parse_single_term(i: &str) -> IResult<&str, Dep> {
     map(cc::i128, Dep::Terminal)(i)
 }
 
-fn parse_multiple_terms(i: &str) -> IResult<&str, Dep> {
+fn parse_multiple_terms<'a>(i: &'a str) -> IResult<&str, Dep<'a>> {
     let (i, o) = tuple((cc::alpha1, parse_bin_op, cc::alpha1))(i)?;
     Ok((
         i,
         Dep::Expr {
-            l: o.0.to_string(),
-            r: o.2.to_string(),
+            l: o.0,
+            r: o.2,
             op: o.1,
         },
     ))
@@ -157,7 +157,7 @@ fn parse_bin_op(i: &str) -> IResult<&str, Op> {
     ))(i)
 }
 
-fn parse_line(i: &str) -> IResult<&str, Monkey> {
+fn parse_line<'a>(i: &'a str) -> IResult<&str, Monkey<'a>> {
     let (i, o) = tuple((
         cc::alpha1,
         tag(": "),
@@ -166,7 +166,7 @@ fn parse_line(i: &str) -> IResult<&str, Monkey> {
     Ok((
         i,
         Monkey {
-            name: o.0.to_string(),
+            name: o.0,
             dep: o.2,
         },
     ))
