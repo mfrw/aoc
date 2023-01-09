@@ -1,13 +1,13 @@
-use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::{cell::RefCell, cmp::Ordering, collections::HashMap, rc::Rc};
 
-use nom::branch::alt;
-use nom::bytes::complete::tag;
-use nom::character::complete as cc;
-use nom::combinator::{all_consuming, map, value};
-use nom::sequence::tuple;
-use nom::Finish;
-use nom::IResult;
+use nom::{
+    branch::alt,
+    bytes::complete::tag,
+    character::complete as cc,
+    combinator::{all_consuming, map, value},
+    sequence::tuple,
+    Finish, IResult,
+};
 
 use crate::utils;
 
@@ -38,6 +38,7 @@ impl utils::Solver<21> for Solver {
         let old = mp.eval("hsdb").cmp(&mp.eval("mwrd"));
 
         let answer = binary_search(i64::MIN as i128, i64::MAX as i128, |x| {
+            mp.clear_lookaside();
             mp.mp
                 .entry("humn".into())
                 .and_modify(|v| v.dep = Dep::Terminal(x));
@@ -81,19 +82,27 @@ where
 
 struct AllMonkeys<'a> {
     mp: HashMap<&'a str, Monkey<'a>>,
+    lookaside: Rc<RefCell<HashMap<&'a str, i128>>>,
 }
 
 impl<'a> AllMonkeys<'a> {
     fn new() -> Self {
-        Self { mp: HashMap::new() }
+        Self {
+            mp: HashMap::new(),
+            lookaside: Default::default(),
+        }
     }
 
     fn add_monkey(&mut self, m: Monkey<'a>) {
         self.mp.entry(m.name.clone()).or_insert(m);
     }
 
-    fn eval(&self, monkey: &str) -> i128 {
-        let monkey = self.mp.get(monkey).unwrap();
+    fn eval(&self, monkey_name: &'a str) -> i128 {
+        if self.lookaside.borrow().contains_key(monkey_name) {
+            return *self.lookaside.borrow().get(monkey_name).unwrap();
+        }
+
+        let monkey = self.mp.get(monkey_name).unwrap();
 
         let v = match &monkey.dep {
             Dep::Terminal(n) => *n,
@@ -108,7 +117,12 @@ impl<'a> AllMonkeys<'a> {
                 }
             }
         };
+        self.lookaside.borrow_mut().insert(monkey_name, v);
         v
+    }
+
+    fn clear_lookaside(&self) {
+        self.lookaside.borrow_mut().clear();
     }
 }
 
