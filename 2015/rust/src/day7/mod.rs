@@ -1,6 +1,8 @@
 use std::{
+    cell::RefCell,
     collections::HashMap,
     ops::{BitAnd, BitOr, Not, Shl, Shr},
+    rc::Rc,
 };
 
 use nom::{
@@ -18,11 +20,11 @@ impl utils::Solver<7> for Day {
     type Part2 = u16;
 
     fn part1(&self, i: &str) -> Result<Self::Part1, Box<dyn std::error::Error>> {
-        let mut sym: SymTab<u16> = SymTab::default();
+        let sym: SymTab<u16> = SymTab::default();
         i.lines().map(|l| parse_line(l).unwrap().1).for_each(|e| {
             sym.insert(e.0, e.1);
         });
-        let ans = sym.remove("a").unwrap().eval(&mut sym).unwrap();
+        let ans = sym.remove("a").unwrap().eval(&sym).unwrap();
         Ok(ans)
     }
 
@@ -58,16 +60,16 @@ enum Expr<T> {
 
 #[derive(Default)]
 struct SymTab<T> {
-    mp: HashMap<String, Expr<T>>,
+    mp: Rc<RefCell<HashMap<String, Expr<T>>>>,
 }
 
 impl<T> SymTab<T> {
-    fn insert(&mut self, k: String, v: Expr<T>) {
-        self.mp.insert(k.into(), v);
+    fn insert(&self, k: String, v: Expr<T>) {
+        self.mp.borrow_mut().insert(k.into(), v);
     }
 
-    fn remove(&mut self, k: &str) -> Option<Expr<T>> {
-        self.mp.remove(k)
+    fn remove(&self, k: &str) -> Option<Expr<T>> {
+        self.mp.borrow_mut().remove(k)
     }
 }
 
@@ -80,7 +82,7 @@ where
     T: Shr<usize, Output = T>,
     T: Not<Output = T>,
 {
-    fn eval(&self, sym: &mut SymTab<T>) -> Option<T> {
+    fn eval(&self, sym: &SymTab<T>) -> Option<T> {
         match self {
             Operand::Value(t) => Some(t.clone()),
             Operand::Label(l) => {
@@ -109,7 +111,7 @@ where
     T: Shr<usize, Output = T>,
     T: Not<Output = T>,
 {
-    fn eval(&self, sym: &mut SymTab<T>) -> Option<T> {
+    fn eval(&self, sym: &SymTab<T>) -> Option<T> {
         let val = match self {
             Expr::Terminal(t) => t.eval(sym),
             Expr::And { l, r } => {
