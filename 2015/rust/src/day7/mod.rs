@@ -24,12 +24,12 @@ impl utils::Solver<7> for Day {
         i.lines().map(|l| parse_line(l).unwrap().1).for_each(|e| {
             sym.insert(e.0, e.1);
         });
-        let ans = sym.remove("a").unwrap().eval(&sym).unwrap();
+        let ans = sym.eval("a").unwrap();
         Ok(ans)
     }
 
     fn part2(&self, i: &str) -> Result<Self::Part2, Box<dyn std::error::Error>> {
-        let mut sym: SymTab<u16> = SymTab::default();
+        let sym: SymTab<u16> = SymTab::default();
         i.lines().map(|l| parse_line(l).unwrap().1).for_each(|e| {
             if e.0 == "b" {
                 sym.insert(e.0, Expr::new_term_with_value(956));
@@ -37,43 +37,47 @@ impl utils::Solver<7> for Day {
                 sym.insert(e.0, e.1);
             }
         });
-        let ans = sym.remove("a").unwrap().eval(&mut sym).unwrap();
+        let ans = sym.eval("a").unwrap();
         Ok(ans)
     }
 }
 
 #[derive(Debug)]
-enum Operand<T> {
+enum Operand<'a, T> {
     Value(T),
-    Label(String),
+    Label(&'a str),
 }
 
 #[derive(Debug)]
-enum Expr<T> {
-    Terminal(Operand<T>),
-    And { l: Operand<T>, r: Operand<T> },
-    Or { l: Operand<T>, r: Operand<T> },
-    Lshift { l: Operand<T>, nr: usize },
-    Rshift { l: Operand<T>, nr: usize },
-    Not { l: Operand<T> },
+enum Expr<'a, T> {
+    Terminal(Operand<'a, T>),
+    And {
+        l: Operand<'a, T>,
+        r: Operand<'a, T>,
+    },
+    Or {
+        l: Operand<'a, T>,
+        r: Operand<'a, T>,
+    },
+    Lshift {
+        l: Operand<'a, T>,
+        nr: usize,
+    },
+    Rshift {
+        l: Operand<'a, T>,
+        nr: usize,
+    },
+    Not {
+        l: Operand<'a, T>,
+    },
 }
 
 #[derive(Default)]
-struct SymTab<T> {
-    mp: Rc<RefCell<HashMap<String, Expr<T>>>>,
+struct SymTab<'a, T> {
+    mp: Rc<RefCell<HashMap<&'a str, Expr<'a, T>>>>,
 }
 
-impl<T> SymTab<T> {
-    fn insert(&self, k: String, v: Expr<T>) {
-        self.mp.borrow_mut().insert(k.into(), v);
-    }
-
-    fn remove(&self, k: &str) -> Option<Expr<T>> {
-        self.mp.borrow_mut().remove(k)
-    }
-}
-
-impl<T> Operand<T>
+impl<'a, T> SymTab<'a, T>
 where
     T: Clone + std::fmt::Debug + Copy,
     T: BitAnd<Output = T>,
@@ -82,12 +86,36 @@ where
     T: Shr<usize, Output = T>,
     T: Not<Output = T>,
 {
-    fn eval(&self, sym: &SymTab<T>) -> Option<T> {
+    fn insert(&self, k: &'a str, v: Expr<'a, T>) {
+        self.mp.borrow_mut().insert(k, v);
+    }
+
+    fn remove(&self, k: &'a str) -> Option<Expr<'a, T>> {
+        self.mp.borrow_mut().remove(k)
+    }
+
+    fn eval(&self, k: &'a str) -> Option<T> {
+        let ans = self.remove(k)?.eval(self)?;
+        self.insert(k, Expr::new_term_with_value(ans));
+        Some(ans)
+    }
+}
+
+impl<'a, T> Operand<'a, T>
+where
+    T: Clone + std::fmt::Debug + Copy,
+    T: BitAnd<Output = T>,
+    T: BitOr<Output = T>,
+    T: Shl<usize, Output = T>,
+    T: Shr<usize, Output = T>,
+    T: Not<Output = T>,
+{
+    fn eval(&self, sym: &SymTab<'a, T>) -> Option<T> {
         match self {
             Operand::Value(t) => Some(t.clone()),
             Operand::Label(l) => {
                 let ans = sym.remove(l)?.eval(sym)?;
-                sym.insert(l.into(), Expr::new_term_with_value(ans));
+                sym.insert(l, Expr::new_term_with_value(ans));
                 Some(ans)
             }
         }
@@ -97,12 +125,12 @@ where
         Operand::Value(e)
     }
 
-    fn new_label(s: &str) -> Self {
-        Operand::Label(s.into())
+    fn new_label(s: &'a str) -> Self {
+        Operand::Label(s)
     }
 }
 
-impl<T> Expr<T>
+impl<'a, T> Expr<'a, T>
 where
     T: Clone + std::fmt::Debug + Copy,
     T: BitAnd<Output = T>,
@@ -111,7 +139,7 @@ where
     T: Shr<usize, Output = T>,
     T: Not<Output = T>,
 {
-    fn eval(&self, sym: &SymTab<T>) -> Option<T> {
+    fn eval(&self, sym: &SymTab<'a, T>) -> Option<T> {
         let val = match self {
             Expr::Terminal(t) => t.eval(sym),
             Expr::And { l, r } => {
@@ -158,7 +186,7 @@ fn parse_rvalue(i: &str) -> IResult<&str, Operand<u16>> {
     alt((parse_u16, parse_lvalue))(i)
 }
 
-fn parse_terminal(i: &str) -> IResult<&str, (String, Expr<u16>)> {
+fn parse_terminal(i: &str) -> IResult<&str, (&str, Expr<u16>)> {
     let (ipt, opt) = tuple((parse_rvalue, tag(" -> "), parse_lvalue))(i)?;
     let l = match opt.2 {
         Operand::Value(_) => panic!("lvalue cant be a constant"),
@@ -169,7 +197,7 @@ fn parse_terminal(i: &str) -> IResult<&str, (String, Expr<u16>)> {
     Ok((ipt, (l, e)))
 }
 
-fn parse_and(i: &str) -> IResult<&str, (String, Expr<u16>)> {
+fn parse_and(i: &str) -> IResult<&str, (&str, Expr<u16>)> {
     let (ipt, opt) = tuple((
         parse_rvalue,
         tag(" AND "),
@@ -186,7 +214,7 @@ fn parse_and(i: &str) -> IResult<&str, (String, Expr<u16>)> {
     Ok((ipt, (l, e)))
 }
 
-fn parse_or(i: &str) -> IResult<&str, (String, Expr<u16>)> {
+fn parse_or(i: &str) -> IResult<&str, (&str, Expr<u16>)> {
     let (ipt, opt) = tuple((
         parse_rvalue,
         tag(" OR "),
@@ -203,7 +231,7 @@ fn parse_or(i: &str) -> IResult<&str, (String, Expr<u16>)> {
     Ok((ipt, (l, e)))
 }
 
-fn parse_lsh(i: &str) -> IResult<&str, (String, Expr<u16>)> {
+fn parse_lsh(i: &str) -> IResult<&str, (&str, Expr<u16>)> {
     let (ipt, opt) = tuple((
         parse_lvalue,
         tag(" LSHIFT "),
@@ -223,7 +251,7 @@ fn parse_lsh(i: &str) -> IResult<&str, (String, Expr<u16>)> {
     Ok((ipt, (l, e)))
 }
 
-fn parse_rsh(i: &str) -> IResult<&str, (String, Expr<u16>)> {
+fn parse_rsh(i: &str) -> IResult<&str, (&str, Expr<u16>)> {
     let (ipt, opt) = tuple((
         parse_lvalue,
         tag(" RSHIFT "),
@@ -243,7 +271,7 @@ fn parse_rsh(i: &str) -> IResult<&str, (String, Expr<u16>)> {
     Ok((ipt, (l, e)))
 }
 
-fn parse_not(i: &str) -> IResult<&str, (String, Expr<u16>)> {
+fn parse_not(i: &str) -> IResult<&str, (&str, Expr<u16>)> {
     let (ipt, opt) = tuple((tag("NOT "), parse_lvalue, tag(" -> "), parse_lvalue))(i)?;
     let l = match opt.3 {
         Operand::Value(_) => panic!("lvalue cant be a constant"),
@@ -254,7 +282,7 @@ fn parse_not(i: &str) -> IResult<&str, (String, Expr<u16>)> {
     Ok((ipt, (l, e)))
 }
 
-fn parse_line(i: &str) -> IResult<&str, (String, Expr<u16>)> {
+fn parse_line(i: &str) -> IResult<&str, (&str, Expr<u16>)> {
     alt((
         parse_terminal,
         parse_and,
@@ -267,18 +295,18 @@ fn parse_line(i: &str) -> IResult<&str, (String, Expr<u16>)> {
 
 #[test]
 fn basic_dep_eval() {
-    let mut sym: SymTab<u16> = SymTab::default();
-    sym.insert("x".into(), Expr::Terminal(Operand::Value(123)));
-    sym.insert("y".into(), Expr::Terminal(Operand::Value(456)));
+    let sym: SymTab<u16> = SymTab::default();
+    sym.insert("x", Expr::Terminal(Operand::Value(123)));
+    sym.insert("y", Expr::Terminal(Operand::Value(456)));
     sym.insert(
-        "d".into(),
+        "d",
         Expr::And {
             l: Operand::new_label("x"),
             r: Operand::new_label("y"),
         },
     );
     sym.insert(
-        "e".into(),
+        "e",
         Expr::Or {
             l: Operand::new_label("x"),
             r: Operand::new_label("y"),
@@ -286,32 +314,32 @@ fn basic_dep_eval() {
     );
 
     sym.insert(
-        "f".into(),
+        "f",
         Expr::Lshift {
             l: Operand::new_label("x"),
             nr: 2,
         },
     );
     sym.insert(
-        "g".into(),
+        "g",
         Expr::Rshift {
             l: Operand::new_label("y"),
             nr: 2,
         },
     );
     sym.insert(
-        "h".into(),
+        "h",
         Expr::Not {
             l: Operand::new_label("x"),
         },
     );
     sym.insert(
-        "i".into(),
+        "i",
         Expr::Not {
             l: Operand::new_label("y"),
         },
     );
-    assert_eq!(sym.remove("e").unwrap().eval(&mut sym), Some(507));
-    assert_eq!(sym.remove("f").unwrap().eval(&mut sym), Some(492));
-    assert_eq!(sym.remove("h").unwrap().eval(&mut sym), Some(65412));
+    assert_eq!(sym.eval("e"), Some(507));
+    assert_eq!(sym.eval("f"), Some(492));
+    assert_eq!(sym.eval("h"), Some(65412));
 }
