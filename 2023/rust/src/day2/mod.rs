@@ -25,7 +25,19 @@ impl utils::Solver<2> for Solver {
 }
 
 fn part2_int(input: &str) -> Option<usize> {
-    todo!()
+    let mut ans = 0;
+    for line in input.lines() {
+        if let Ok((_, game)) = parse_game_line(line) {
+            let (mut r, mut g, mut b) = (0, 0, 0);
+            for rnd in game.rounds {
+                r = r.max(rnd.red);
+                g = g.max(rnd.green);
+                b = b.max(rnd.blue);
+            }
+            ans += r * g * b;
+        }
+    }
+    Some(ans)
 }
 
 fn part1_int(input: &str) -> Option<usize> {
@@ -126,4 +138,14 @@ Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
 Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
     assert_eq!(part1_int(i), Some(8))
+}
+
+#[test]
+fn p2_test() {
+    let i = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
+    assert_eq!(part2_int(i), Some(2286))
 }
