@@ -1,13 +1,13 @@
 use crate::utils;
-use nom::branch::alt;
-use nom::bytes::complete::tag;
-use nom::bytes::complete::take_while1;
-use nom::character::complete::multispace0;
-use nom::combinator::map_res;
-use nom::multi::separated_list0;
-use nom::sequence::preceded;
-use nom::sequence::tuple;
-use nom::IResult;
+use nom::{
+    branch::alt,
+    bytes::complete::{tag, take_while1},
+    character::complete::multispace0,
+    combinator::map_res,
+    multi::separated_list0,
+    sequence::{preceded, tuple},
+    IResult,
+};
 
 pub struct Solver;
 
