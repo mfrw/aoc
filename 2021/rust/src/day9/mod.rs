@@ -1,4 +1,5 @@
 use crate::utils;
+use crate::utils::sort::Sorter;
 
 pub fn main() -> Result<(), std::io::Error> {
     let input = get_input()?;
@@ -38,8 +39,11 @@ fn part2(input: &[Vec<u8>]) -> usize {
             }
         }
     }
-    memo.sort();
-    memo.into_iter().rev().take(3).fold(1, |acc, p| acc * p)
+    memo.into_iter()
+        .sort()
+        .rev()
+        .take(3)
+        .fold(1, |acc, p| acc * p)
 }
 
 fn part1(input: &[Vec<u8>]) -> usize {
