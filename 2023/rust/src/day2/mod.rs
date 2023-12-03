@@ -25,37 +25,46 @@ impl utils::Solver<2> for Solver {
 }
 
 fn part2_int(input: &str) -> Option<usize> {
-    let mut ans = 0;
-    for line in input.lines() {
-        if let Ok((_, game)) = all_consuming(parse_game_line)(line).finish() {
-            let (mut r, mut g, mut b) = (0, 0, 0);
-            for rnd in game.rounds {
-                r = r.max(rnd.red);
-                g = g.max(rnd.green);
-                b = b.max(rnd.blue);
+    let ans = input
+        .lines()
+        .map(|line| {
+            if let Ok((_, game)) = all_consuming(parse_game_line)(line).finish() {
+                let (mut r, mut g, mut b) = (0, 0, 0);
+                for rnd in game.rounds {
+                    r = r.max(rnd.red);
+                    g = g.max(rnd.green);
+                    b = b.max(rnd.blue);
+                }
+                r * g * b
+            } else {
+                0
             }
-            ans += r * g * b;
-        }
-    }
+        })
+        .sum();
     Some(ans)
 }
 
 fn part1_int(input: &str) -> Option<usize> {
-    let mut ans = 0;
-    for line in input.lines() {
-        if let Ok((_, game)) = all_consuming(parse_game_line)(line).finish() {
-            let (mut r, mut g, mut b) = (0, 0, 0);
-            for rnd in game.rounds {
-                r = r.max(rnd.red);
-                g = g.max(rnd.green);
-                b = b.max(rnd.blue);
+    let ans = input
+        .lines()
+        .map(|line| {
+            if let Ok((_, game)) = all_consuming(parse_game_line)(line).finish() {
+                let (mut r, mut g, mut b) = (0, 0, 0);
+                for rnd in game.rounds {
+                    r = r.max(rnd.red);
+                    g = g.max(rnd.green);
+                    b = b.max(rnd.blue);
+                }
+                if r > 12 || g > 13 || b > 14 {
+                    0
+                } else {
+                    game.id
+                }
+            } else {
+                0
             }
-            if r > 12 || g > 13 || b > 14 {
-                continue;
-            }
-            ans += game.id;
-        }
-    }
+        })
+        .sum();
     Some(ans)
 }
 
@@ -122,7 +131,7 @@ fn parse_round(i: &str) -> IResult<&str, GameRound> {
 }
 
 fn parse_game_line(i: &str) -> IResult<&str, Game> {
-    let (i, (_, id, _)) = tuple((tag("Game "), parse_number, tag(": ")))(i)?;
+    let (i, (_, _, id, _, _)) = tuple((tag("Game"), sp, parse_number, tag(":"), sp))(i)?;
     //println!("GameID: {id}");
     let (i, rounds) = separated_list0(preceded(sp, tag("; ")), parse_round)(i)?;
     //println!("{:?}", rounds);
