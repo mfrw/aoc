@@ -13,7 +13,7 @@ pub struct Solver;
 
 impl utils::Solver<3> for Solver {
     type Part1 = u32;
-    type Part2 = usize;
+    type Part2 = u32;
 
     fn part1(&self, input: &str) -> Result<Self::Part1, Box<dyn std::error::Error>> {
         Ok(part1_int(input).unwrap())
@@ -24,8 +24,47 @@ impl utils::Solver<3> for Solver {
     }
 }
 
-fn part2_int(input: &str) -> Option<usize> {
-    unimplemented!()
+fn part2_int(input: &str) -> Option<u32> {
+    let grid: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
+    let mut numbers: Vec<Num> = Vec::new();
+    let mut gear_map = HashSet::new();
+
+    for (idx1, x) in grid.into_iter().enumerate() {
+        let mut digit = 0;
+        let mut area = HashSet::new();
+
+        for (idx2, ch) in x.into_iter().enumerate() {
+            match ch {
+                '*' => {
+                    gear_map.insert((idx1, idx2));
+                    push_num(&mut numbers, &mut digit, &mut area);
+                }
+                _ if ch.is_digit(10) => {
+                    add_coord(&mut area, idx1, idx2);
+                    digit = digit * 10 + ch.to_digit(10).unwrap();
+                }
+                _ => push_num(&mut numbers, &mut digit, &mut area),
+            }
+        }
+        push_num(&mut numbers, &mut digit, &mut area);
+    }
+
+    Some(gear_map.iter().fold(0, |mut answer, &coord| {
+        let mut last_num = 0;
+        let mut counter = 0;
+
+        for n in &numbers {
+            if n.area.contains(&coord) {
+                if counter > 0 {
+                    answer += last_num * n.num;
+                    counter = 0;
+                }
+                last_num = n.num;
+                counter += 1;
+            }
+        }
+        answer
+    }))
 }
 
 fn part1_int(input: &str) -> Option<u32> {
@@ -146,4 +185,19 @@ fn p1_test() {
 ...$.*....
 .664.598..";
     assert_eq!(Some(4361), part1_int(i))
+}
+
+#[test]
+fn p2_test() {
+    let i = "467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..";
+    assert_eq!(Some(467835), part2_int(i))
 }
