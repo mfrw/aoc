@@ -3,10 +3,10 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
     character::complete::multispace0,
-    combinator::map_res,
+    combinator::{all_consuming, map_res},
     multi::separated_list0,
     sequence::{preceded, tuple},
-    IResult,
+    Finish, IResult,
 };
 
 pub struct Solver;
@@ -27,7 +27,7 @@ impl utils::Solver<2> for Solver {
 fn part2_int(input: &str) -> Option<usize> {
     let mut ans = 0;
     for line in input.lines() {
-        if let Ok((_, game)) = parse_game_line(line) {
+        if let Ok((_, game)) = all_consuming(parse_game_line)(line).finish() {
             let (mut r, mut g, mut b) = (0, 0, 0);
             for rnd in game.rounds {
                 r = r.max(rnd.red);
@@ -43,7 +43,7 @@ fn part2_int(input: &str) -> Option<usize> {
 fn part1_int(input: &str) -> Option<usize> {
     let mut ans = 0;
     for line in input.lines() {
-        if let Ok((_, game)) = parse_game_line(line) {
+        if let Ok((_, game)) = all_consuming(parse_game_line)(line).finish() {
             let (mut r, mut g, mut b) = (0, 0, 0);
             for rnd in game.rounds {
                 r = r.max(rnd.red);
