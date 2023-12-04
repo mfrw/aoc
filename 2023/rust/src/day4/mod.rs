@@ -14,7 +14,7 @@ pub struct Solver;
 
 impl utils::Solver<4> for Solver {
     type Part1 = u32;
-    type Part2 = u32;
+    type Part2 = usize;
 
     fn part1(&self, input: &str) -> Result<Self::Part1, Box<dyn std::error::Error>> {
         Ok(part1_int(input).unwrap())
@@ -45,10 +45,30 @@ fn part1_int(input: &str) -> Option<u32> {
     Some(ans)
 }
 
-fn part2_int(input: &str) -> Option<u32> {
-    todo!()
+fn win_cards(cards: &[Card], copies_count: &mut [usize], card_number: usize) {
+    let st1 = HashSet::<&usize>::from_iter(cards[card_number - 1].got.iter());
+    let st2 = HashSet::<&usize>::from_iter(cards[card_number - 1].win.iter());
+    let cnt = st1.intersection(&st2).count();
+
+    for next_card_number in card_number + 1..=card_number + cnt {
+        copies_count[next_card_number - 1] += copies_count[card_number - 1];
+    }
 }
 
+fn part2_int(input: &str) -> Option<usize> {
+    let mut cards = vec![];
+    for line in input.lines() {
+        cards.push(parse_card(line).unwrap().1);
+    }
+    let mut copies_count = vec![1; cards.len()];
+
+    for card_number in 1..copies_count.len() {
+        win_cards(&cards, &mut copies_count, card_number);
+    }
+    Some(copies_count.iter().sum())
+}
+
+#[allow(dead_code)]
 #[derive(Debug)]
 struct Card {
     id: usize,
@@ -88,4 +108,15 @@ Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
 Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
 Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11";
     assert_eq!(Some(13), part1_int(i))
+}
+
+#[test]
+fn p2_test() {
+    let i = "Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
+Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
+Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
+Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
+Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
+Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11";
+    assert_eq!(Some(30), part2_int(i))
 }
