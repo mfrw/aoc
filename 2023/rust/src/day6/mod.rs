@@ -27,7 +27,8 @@ fn part1_int(input: &str) -> Option<u64> {
 }
 
 fn part2_int(input: &str) -> Option<u64> {
-    todo!()
+    let input = parse_p2(input);
+    Some(input.possible_win_range().count() as u64)
 }
 
 struct Race {
@@ -79,9 +80,33 @@ fn parse_p1(input: &str) -> Vec<Race> {
         .collect()
 }
 
+fn parse_p2(input: &str) -> Race {
+    let lines = input.lines().collect::<Vec<_>>();
+    let times = lines[0];
+    let distances = lines[1];
+
+    let time = times.strip_prefix("Time:").unwrap().trim();
+    let distance = distances.strip_prefix("Distance:").unwrap().trim();
+
+    let time = time.replace(' ', "").parse::<u64>().unwrap();
+    let record_distance = distance.replace(' ', "").parse::<u64>().unwrap();
+
+    Race {
+        time,
+        record_distance,
+    }
+}
+
 #[test]
 fn p1_test() {
     let i = "Time:      7  15   30
 Distance:  9  40  200";
     assert_eq!(Some(288), part1_int(i))
+}
+
+#[test]
+fn p2_test() {
+    let i = "Time:      7  15   30
+Distance:  9  40  200";
+    assert_eq!(Some(71503), part2_int(i))
 }
