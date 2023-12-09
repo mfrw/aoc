@@ -9,7 +9,7 @@ pub struct Solver;
 
 impl utils::Solver<7> for Solver {
     type Part1 = usize;
-    type Part2 = u32;
+    type Part2 = usize;
 
     fn part1(&self, input: &str) -> Result<Self::Part1, Box<dyn std::error::Error>> {
         Ok(part1_int(input).unwrap())
@@ -39,8 +39,23 @@ fn part1_int(input: &str) -> Option<usize> {
     Some(winnings)
 }
 
-fn part2_int(input: &str) -> Option<u32> {
-    todo!()
+fn part2_int(input: &str) -> Option<usize> {
+    let mut hands: Vec<Hand> = input
+        .lines()
+        .map(|line| {
+            let s = line.split_once(" ").unwrap();
+            Hand::new(s.0, s.1, true)
+        })
+        .collect();
+
+    hands.sort_unstable_by_key(|hand| (hand.strength, hand.values));
+
+    let winnings = hands
+        .iter()
+        .enumerate()
+        .fold(0, |acc, (i, hand)| acc + (hand.bid as usize * (i + 1)));
+
+    Some(winnings)
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -139,4 +154,14 @@ KK677 28
 KTJJT 220
 QQQJA 483";
     assert_eq!(Some(6440), part1_int(i))
+}
+
+#[test]
+fn p2_test() {
+    let i = "32T3K 765
+T55J5 684
+KK677 28
+KTJJT 220
+QQQJA 483";
+    assert_eq!(Some(5905), part2_int(i))
 }
