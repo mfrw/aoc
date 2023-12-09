@@ -105,7 +105,47 @@ fn part1_int(input: &str) -> Option<usize> {
 }
 
 fn part2_int(input: &str) -> Option<usize> {
-    todo!()
+    if let Ok((_, map)) = Map::parse(input) {
+        let starts = map
+            .edges
+            .keys()
+            .filter(|k| k.ends_with('A'))
+            .collect::<Vec<_>>();
+        let ends = map
+            .edges
+            .keys()
+            .filter(|k| k.ends_with('Z'))
+            .collect::<Vec<_>>();
+        let mut steps = vec![];
+        for start in starts {
+            let (s, _end) = map.find_end(start, |s| ends.contains(&&s));
+            steps.push(s);
+        }
+        let mut start = "ZZZ";
+        for _ in 0..=9 {
+            let (_s, end) = map.find_end(start, |s| ends.contains(&&s));
+            start = end;
+        }
+        Some(lcm(&steps))
+    } else {
+        None
+    }
+}
+
+pub fn lcm(nums: &[usize]) -> usize {
+    if nums.len() == 1 {
+        return nums[0];
+    }
+    let a = nums[0];
+    let b = lcm(&nums[1..]);
+    a * b / gcd_of_two_numbers(a, b)
+}
+
+fn gcd_of_two_numbers(a: usize, b: usize) -> usize {
+    if b == 0 {
+        return a;
+    }
+    gcd_of_two_numbers(b, a % b)
 }
 
 #[test]
@@ -116,4 +156,14 @@ AAA = (BBB, BBB)
 BBB = (AAA, ZZZ)
 ZZZ = (ZZZ, ZZZ)";
     assert_eq!(Some(6), part1_int(i))
+}
+
+#[test]
+fn p2_test() {
+    let i = "LLR
+
+AAA = (BBB, BBB)
+BBB = (AAA, ZZZ)
+ZZZ = (ZZZ, ZZZ)";
+    assert_eq!(Some(6), part2_int(i))
 }
