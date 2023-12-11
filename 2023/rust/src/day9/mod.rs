@@ -25,7 +25,7 @@ fn part1_int(input: &str) -> Option<i64> {
 }
 
 fn part2_int(input: &str) -> Option<i64> {
-    todo!()
+    Some(solve(&parse_input(input), |n| n[0], extrapolate_first))
 }
 
 pub fn parse_input(input: &str) -> Vec<Vec<i64>> {
@@ -85,10 +85,28 @@ fn extrapolate_last(nums: &[i64]) -> i64 {
     ext
 }
 
+fn extrapolate_first(nums: &[i64]) -> i64 {
+    let mut ext = 0;
+
+    for idx in (0..nums.len()).rev() {
+        ext = nums[idx] - ext
+    }
+
+    ext
+}
+
 #[test]
 fn p1_test() {
     let i = "0 3 6 9 12 15
 1 3 6 10 15 21
 10 13 16 21 30 45";
     assert_eq!(part1_int(i), Some(114))
+}
+
+#[test]
+fn p2_test() {
+    let i = "0 3 6 9 12 15
+1 3 6 10 15 21
+10 13 16 21 30 45";
+    assert_eq!(part2_int(i), Some(2))
 }
