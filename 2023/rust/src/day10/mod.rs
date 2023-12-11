@@ -18,7 +18,13 @@ impl utils::Solver<10> for Solver {
     }
 }
 
-fn fill_map(input: &str) -> HashSet<(usize, usize)> {
+fn fill_map(
+    input: &str,
+) -> (
+    HashSet<(usize, usize)>,
+    HashSet<(usize, usize)>,
+    (usize, usize),
+) {
     let dat = input.lines().map(|s| s.as_bytes()).collect::<Vec<_>>();
     let fr = dat
         .iter()
@@ -106,16 +112,49 @@ fn fill_map(input: &str) -> HashSet<(usize, usize)> {
         (p, pr) = (q, p);
         pt.insert(p);
     }
-    pt
+    (pt, nx, (wid, hgt))
 }
 
 fn part1_int(input: &str) -> Option<usize> {
-    let pt = fill_map(input);
+    let pt = fill_map(input).0;
     Some(pt.len() / 2)
 }
 
 fn part2_int(input: &str) -> Option<usize> {
-    todo!()
+    let (pt, mut nx, (wid, hgt)) = fill_map(input);
+    let mut sd = HashSet::new();
+    loop {
+        nx.retain(|p| !sd.contains(p) && !pt.contains(p));
+        if nx.is_empty() {
+            break;
+        }
+        let mut a = HashSet::new();
+        for p in nx {
+            sd.insert(p);
+            if p.0 > 0 {
+                a.insert((p.0 - 1, p.1));
+            }
+            if p.1 > 0 {
+                a.insert((p.0, p.1 - 1));
+            }
+            if p.0 < wid - 1 {
+                a.insert((p.0 + 1, p.1));
+            }
+            if p.1 < hgt - 1 {
+                a.insert((p.0, p.1 + 1));
+            }
+        }
+        nx = a;
+    }
+    let f = sd
+        .iter()
+        .all(|&(x, y)| 0 < x && x < wid - 1 && 0 < y && y < hgt - 1);
+    let ans = if f {
+        sd.len()
+    } else {
+        wid * hgt - sd.len() - pt.len()
+    };
+    Some(ans)
 }
 
 #[test]
@@ -126,4 +165,20 @@ fn p1_test() {
 .L-J.
 .....";
     assert_eq!(part1_int(i), Some(4))
+}
+
+#[test]
+fn p2_test() {
+    let i = "FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJIF7FJ-
+L---JF-JLJIIIIFJLJJ7
+|F|F-JF---7IIIL7L|7|
+|FFJF7L7F-JF7IIL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L";
+
+    assert_eq!(part2_int(i), Some(10))
 }
