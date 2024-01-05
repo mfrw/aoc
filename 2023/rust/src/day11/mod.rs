@@ -23,7 +23,9 @@ fn part1_int(input: &str) -> Option<usize> {
 }
 
 fn part2_int(input: &str) -> Option<usize> {
-    todo!()
+    let u = generate(input);
+    let ans = total_galaxy_distance(&u, 1000000);
+    Some(ans)
 }
 
 pub struct Universe {
