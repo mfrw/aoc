@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use std::collections::HashMap;
 
 use crate::utils;
@@ -23,7 +24,7 @@ fn part1_int(input: &str) -> Option<usize> {
 }
 
 fn part2_int(input: &str) -> Option<usize> {
-    todo!()
+    Some(expanded_arrangements(input))
 }
 
 fn arrangements(input: &str) -> usize {
@@ -90,4 +91,39 @@ fn line_arrangements(
     }
     cache.insert((damaged_idx, start), result);
     result
+}
+
+fn expanded_arrangements(input: &str) -> usize {
+    input
+        .par_lines()
+        .map(|l| {
+            let (conditions, damaged_str) = l.split_once(' ').unwrap();
+            let damaged = damaged_str
+                .split(',')
+                .map(|d| d.parse().unwrap())
+                .collect::<Vec<usize>>();
+            let mut d_exp = Vec::with_capacity(50);
+            let mut c_exp = Vec::with_capacity(50);
+            for i in 0..5 {
+                for d in &damaged {
+                    d_exp.push(*d);
+                }
+                for c in conditions.chars() {
+                    c_exp.push(c);
+                }
+                if i != 4 {
+                    c_exp.push('?');
+                }
+            }
+            let a = line_arrangements(
+                0,
+                0,
+                c_exp.len() - d_exp.iter().skip(1).map(|d| d + 1).sum::<usize>(),
+                &c_exp,
+                &d_exp,
+                &mut HashMap::default(),
+            );
+            a
+        })
+        .sum()
 }
