@@ -33,7 +33,43 @@ impl utils::Solver<6> for Solver {
     }
 
     fn part2(&self, input: &str) -> Result<Self::Part2, Box<dyn std::error::Error>> {
-        todo!()
+        let characters: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
+        let mut stack: Vec<i64> = Vec::new();
+        let mut result = 0;
+
+        'next_column: for x in (0..characters[0].len()).rev() {
+            let mut is_number = false;
+            let mut current_number = 0;
+
+            for row in &characters {
+                match row[x] {
+                    x if x.is_ascii_digit() => {
+                        is_number = true;
+                        current_number = 10 * current_number + x.to_digit(10).unwrap() as i64;
+                    }
+                    '+' => {
+                        stack.push(current_number);
+
+                        result += stack.iter().sum::<i64>();
+                        stack.clear();
+                        continue 'next_column;
+                    }
+                    '*' => {
+                        stack.push(current_number);
+
+                        result += stack.iter().product::<i64>();
+                        stack.clear();
+                        continue 'next_column;
+                    }
+                    _ => {}
+                }
+            }
+
+            if is_number {
+                stack.push(current_number);
+            }
+        }
+        Ok(result)
     }
 }
 
