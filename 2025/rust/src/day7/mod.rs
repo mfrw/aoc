@@ -1,5 +1,5 @@
 use crate::utils;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub struct Solver;
 
@@ -9,7 +9,7 @@ type Pos = (Coord, Coord);
 impl utils::Solver<7> for Solver {
     type Part1 = u32;
 
-    type Part2 = u32;
+    type Part2 = u64;
 
     fn part1(&self, input: &str) -> Result<Self::Part1, Box<dyn std::error::Error>> {
         let (start, height, splitters) = parse_input(input);
@@ -17,7 +17,8 @@ impl utils::Solver<7> for Solver {
     }
 
     fn part2(&self, input: &str) -> Result<Self::Part2, Box<dyn std::error::Error>> {
-        todo!()
+        let (start, height, splitters) = parse_input(input);
+        Ok(count_quantum_splits(start, height, &splitters))
     }
 }
 
@@ -56,4 +57,22 @@ fn parse_input(input: &str) -> (Pos, Coord, HashSet<Pos>) {
         height = i + 1;
     }
     (start, height, splitters)
+}
+
+fn count_quantum_splits(start: Pos, height: Coord, splitters: &HashSet<Pos>) -> u64 {
+    let (x, y0) = start;
+    let mut beams: HashMap<Coord, u64> = HashMap::from([(x, 1); 1]);
+    for y in y0 + 1..height {
+        let mut new_beams: HashMap<Coord, u64> = HashMap::new();
+        for (x, c) in beams {
+            if splitters.contains(&(x, y)) {
+                *new_beams.entry(x - 1).or_insert(0) += c;
+                *new_beams.entry(x + 1).or_insert(0) += c;
+            } else {
+                *new_beams.entry(x).or_insert(0) += c;
+            }
+        }
+        beams = new_beams;
+    }
+    beams.values().sum()
 }
