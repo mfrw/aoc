@@ -4,6 +4,7 @@ use crate::utils::Solver;
 
 mod day1;
 mod day10;
+mod day11;
 mod day2;
 mod day3;
 mod day4;
@@ -24,5 +25,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     day8::Solver.solve()?;
     day9::Solver.solve()?;
     day10::Solver.solve()?;
+    day11::Solver.solve()?;
     Ok(())
 }
