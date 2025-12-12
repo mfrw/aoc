@@ -21,8 +21,8 @@ impl utils::Solver<12> for Solver {
         Ok(answer)
     }
 
-    fn part2(&self, input: &str) -> Result<Self::Part2, Box<dyn std::error::Error>> {
-        todo!()
+    fn part2(&self, _input: &str) -> Result<Self::Part2, Box<dyn std::error::Error>> {
+        Ok(0)
     }
 }
 
