@@ -72,14 +72,12 @@ The solutions use minimal external dependencies, primarily:
 
 ## Progress
 
-**Total Days Solved: 92 out of 200 possible (2015-2025)**
-
 Completed Years:
 - ✅ 2021 - All 25 days
 - ✅ 2022 - All 25 days
 
 In Progress:
-- 2025 - 12/25 days (current year)
+- 2025 - 12/25 days
 - 2023 - 13/25 days
 - 2015 - 9/25 days
 - 2016 - 3/25 days
